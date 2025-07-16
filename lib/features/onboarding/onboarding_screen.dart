@@ -1,3 +1,4 @@
+import 'package:celebray/features/signin/sign_in_screen.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -49,7 +50,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ), // Add padding to move the button up
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pushReplacementNamed('/home');
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => SignInScreen(
+                          onSignedIn: () {
+                            Navigator.of(context).pushReplacementNamed('/home');
+                          },
+                        ),
+                      ),
+                    );
                   },
                   child: Text("Get Started"),
                 ),

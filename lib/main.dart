@@ -1,3 +1,4 @@
+import 'package:celebray/features/signin/sign_in_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +19,10 @@ class CelebrayApp extends StatelessWidget {
       title: 'Celebray',
       theme: ThemeData(primarySwatch: Colors.pink, useMaterial3: true),
       initialRoute: '/',
-      routes: {'/': (_) => OnboardingScreen()},
+      routes: {
+        '/': (_) => OnboardingScreen(),
+        '/signin': (context) => SignInScreen(),
+      },
     );
   }
 }

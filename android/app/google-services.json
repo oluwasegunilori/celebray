@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:68778743183:android:03963effdbb08719b8a7fa",
+        "mobilesdk_app_id": "1:68778743183:android:7fd9fc5609dbe372b8a7fa",
         "android_client_info": {
-          "package_name": "com.example.celebray"
+          "package_name": "com.shegz.celebray"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "68778743183-c3qmhq9ajicfs5ilkv7qp326f9qcahll.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDPRgizyZrQFgT2e0zUOHR-4JL-_mQxbQI"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "68778743183-c3qmhq9ajicfs5ilkv7qp326f9qcahll.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "68778743183-2g75emk8blahqb9dacjmbt7njshrvg2b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.celebray"
+              }
+            }
+          ]
         }
       }
     }
