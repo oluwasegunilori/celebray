@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "68778743183",
+    "project_id": "celebray-fa7ae",
+    "storage_bucket": "celebray-fa7ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:68778743183:android:03963effdbb08719b8a7fa",
+        "android_client_info": {
+          "package_name": "com.example.celebray"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPRgizyZrQFgT2e0zUOHR-4JL-_mQxbQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
