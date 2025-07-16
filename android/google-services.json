@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:68778743183:android:03963effdbb08719b8a7fa",
+        "mobilesdk_app_id": "1:68778743183:android:7fd9fc5609dbe372b8a7fa",
         "android_client_info": {
-          "package_name": "com.example.celebray"
+          "package_name": "com.shegz.celebray"
         }
       },
       "oauth_client": [
