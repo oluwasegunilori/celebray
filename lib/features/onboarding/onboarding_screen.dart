@@ -44,7 +44,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         padding: const EdgeInsets.all(16.0),
         child: _currentIndex == pages.length - 1
             ? Padding(
-                padding: const EdgeInsets.only(bottom: 32.0), // Add padding to move the button up
+                padding: const EdgeInsets.only(
+                  bottom: 32.0,
+                ), // Add padding to move the button up
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushReplacementNamed('/home');
@@ -80,7 +82,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     child: Row(
                       children: [
-                        Text("Next", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(
+                          "Next",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward, size: 16),
                       ],
@@ -98,7 +106,11 @@ class OnboardPage extends StatelessWidget {
   final String title;
   final String desc;
 
-  const OnboardPage({required this.image, required this.title, required this.desc});
+  const OnboardPage({
+    required this.image,
+    required this.title,
+    required this.desc,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +122,16 @@ class OnboardPage extends StatelessWidget {
           children: [
             Icon(image, size: 100, color: Colors.pink),
             SizedBox(height: 40),
-            Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 16),
-            Text(desc, textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
+            Text(
+              desc,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),
