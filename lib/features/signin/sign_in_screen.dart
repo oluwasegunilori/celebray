@@ -27,8 +27,9 @@ class _SignInScreenState extends State<SignInScreen> {
     try {
       final userCred = await _auth.signInWithApple();
       if (userCred != null) widget.onSignedIn();
-    } catch (_) {
+    } catch (e) {
       // Handle user cancel or failure
+      print("Sign in with Apple failed: $e");
     }
     setState(() => _loading = false);
   }

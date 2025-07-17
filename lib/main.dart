@@ -21,8 +21,10 @@ class CelebrayApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (_) => OnboardingScreen(),
-        '/signin': (context) => SignInScreen(),
-      },
+        '/home': (_) => Scaffold(
+              appBar: AppBar(title: Text("Home")),
+              body: Center(child: Text("Welcome to Celebray!")),
+            ),},
     );
   }
 }

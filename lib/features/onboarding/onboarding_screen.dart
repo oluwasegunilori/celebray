@@ -52,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (_) => SignInScreen(
+                        builder: (context) => SignInScreen(
                           onSignedIn: () {
                             Navigator.of(context).pushReplacementNamed('/home');
                           },
