@@ -1,5 +1,6 @@
 import 'package:celebray/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignedIn;
@@ -19,14 +20,20 @@ class _SignInScreenState extends State<SignInScreen> {
     final userCred = await _auth.signInWithGoogle();
     setState(() => _loading = false);
 
-    if (userCred != null) widget.onSignedIn();
+    if (userCred != null) {
+      await _saveOnboardingPreference();
+      widget.onSignedIn();
+    }
   }
 
   void _signInWithApple() async {
     setState(() => _loading = true);
     try {
       final userCred = await _auth.signInWithApple();
-      if (userCred != null) widget.onSignedIn();
+      if (userCred != null) {
+        await _saveOnboardingPreference();
+        widget.onSignedIn();
+      }
     } catch (e) {
       // Handle user cancel or failure
       print("Sign in with Apple failed: $e");
@@ -36,6 +43,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _skipSignIn() {
     widget.onSignedIn();
+  }
+
+  Future<void> _saveOnboardingPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOnboarded', true);
   }
 
   @override

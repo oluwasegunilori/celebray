@@ -1,5 +1,6 @@
 import 'package:celebray/features/signin/sign_in_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -30,6 +31,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
+  Future<void> _saveOnboardingPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOnboarded', true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +55,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   bottom: 32.0,
                 ), // Add padding to move the button up
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await _saveOnboardingPreference();
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (context) => SignInScreen(
@@ -67,7 +74,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () => _controller.jumpToPage(pages.length - 1),
+                    onPressed: () async {
+                      Navigator.of(context).pushReplacementNamed('/sign-in');
+                    },
                     child: Text("Skip"),
                   ),
                   Row(

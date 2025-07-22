@@ -13,11 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final screens = [
-    CalendarScreen(),
-    GeneratorScreen(),
-    RemindersScreen(),
-  ];
+  final screens = [RemindersScreen(), CalendarScreen(), GeneratorScreen()];
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +28,15 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Calendar'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Generate'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Reminders'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Reminders',
+          ),
         ],
       ),
     );
