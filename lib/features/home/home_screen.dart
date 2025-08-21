@@ -21,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: Colors.pinkAccent,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
