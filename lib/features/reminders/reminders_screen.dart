@@ -1,12 +1,13 @@
-import 'package:celebray/features/reminders/providers/reminder_provider.dart';
+import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RemindersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reminders = ref.watch(reminderProvider);
-    final notifier = ref.read(reminderProvider.notifier);
+    // Listen to events (the front-facing "reminders")
+    final eventsAsync = ref.watch(eventNotifierProvider);
+    final notifier = ref.read(eventNotifierProvider.notifier);
 
     void _showAddReminderDialog() {
       String input = '';
@@ -27,7 +28,9 @@ class RemindersScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (input.trim().isNotEmpty) {
-                  notifier.addReminder(input.trim());
+                  // Create an Event from input
+                  // final event = Event(title: input.trim(), date: DateTime.now());
+                  // notifier.addEvent(event);
                 }
                 Navigator.pop(context);
               },
@@ -44,22 +47,41 @@ class RemindersScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.delete),
-            onPressed: () => notifier.clearAll(),
+            onPressed: () async {
+              // Clear all events
+              final events = await ref
+                  .read(eventNotifierProvider.notifier)
+                  .build()
+                  .first;
+              for (final e in events) {
+                await notifier.deleteEvent(e);
+              }
+            },
           ),
         ],
       ),
-      body: reminders.isEmpty
-          ? Center(child: Text('No reminders yet.'))
-          : ListView.builder(
-              itemCount: reminders.length,
-              itemBuilder: (context, index) => ListTile(
-                title: Text(reminders[index]),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete_outline),
-                  onPressed: () => notifier.removeReminder(index),
-                ),
+      body: eventsAsync.when(
+        data: (events) => events.isEmpty
+            ? Center(child: Text('No reminders yet.'))
+            : ListView.builder(
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return ListTile(
+                    title: Text(event.name),
+                    subtitle: Text('${event.type} • ${event.date.toLocal()}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        notifier.deleteEvent(event);
+                      },
+                    ),
+                  );
+                },
               ),
-            ),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('Error: $err')),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddReminderDialog,
         child: Icon(Icons.add),
