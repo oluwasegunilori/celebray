@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../calendar/calendar_screen.dart';
 import '../generator/generator_screen.dart';
-import '../reminders/reminders_screen.dart';
+import '../reminders/ui/reminders_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -4,14 +4,14 @@ import '../models/event.dart';
 @dao
 abstract class EventDao {
   @Query('SELECT * FROM events ORDER BY date ASC')
-  Stream<List<Event>> getAllEvents();
+  Stream<List<EventEntity>> getAllEvents();
 
   @insert
-  Future<void> insertEvent(Event event);
+  Future<void> insertEvent(EventEntity event);
 
   @update
-  Future<void> updateEvent(Event event);
+  Future<void> updateEvent(EventEntity event);
 
   @delete
-  Future<void> deleteEvent(Event event);
+  Future<void> deleteEvent(EventEntity event);
 }

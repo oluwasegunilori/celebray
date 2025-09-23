@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:floor/floor.dart';
 
 class DateTimeConverter extends TypeConverter<DateTime, int> {
@@ -10,4 +12,16 @@ class DateTimeConverter extends TypeConverter<DateTime, int> {
   int encode(DateTime value) {
     return value.millisecondsSinceEpoch;
   }
+}
+
+class StringListConverter extends TypeConverter<List<String>, String> {
+  @override
+  List<String> decode(String databaseValue) {
+    if (databaseValue.isEmpty) return [];
+    final list = json.decode(databaseValue);
+    return List<String>.from(list);
+  }
+
+  @override
+  String encode(List<String> value) => json.encode(value);
 }

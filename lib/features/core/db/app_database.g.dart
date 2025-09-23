@@ -96,7 +96,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `events` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `date` INTEGER NOT NULL, `relationship` TEXT NOT NULL, `memory` TEXT, `imagePath` TEXT, `generatedMessage` TEXT, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `events` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `date` INTEGER NOT NULL, `relationship` TEXT NOT NULL, `sex` TEXT NOT NULL, `closeness` INTEGER NOT NULL, `memories` TEXT NOT NULL, `imagePath` TEXT, `generatedMessage` TEXT, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -115,46 +115,52 @@ class _$EventDao extends EventDao {
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database, changeListener),
-        _eventInsertionAdapter = InsertionAdapter(
+        _eventEntityInsertionAdapter = InsertionAdapter(
             database,
             'events',
-            (Event item) => <String, Object?>{
+            (EventEntity item) => <String, Object?>{
                   'id': item.id,
                   'name': item.name,
                   'type': item.type,
                   'date': _dateTimeConverter.encode(item.date),
                   'relationship': item.relationship,
-                  'memory': item.memory,
+                  'sex': item.sex,
+                  'closeness': item.closeness,
+                  'memories': _stringListConverter.encode(item.memories),
                   'imagePath': item.imagePath,
                   'generatedMessage': item.generatedMessage
                 },
             changeListener),
-        _eventUpdateAdapter = UpdateAdapter(
+        _eventEntityUpdateAdapter = UpdateAdapter(
             database,
             'events',
             ['id'],
-            (Event item) => <String, Object?>{
+            (EventEntity item) => <String, Object?>{
                   'id': item.id,
                   'name': item.name,
                   'type': item.type,
                   'date': _dateTimeConverter.encode(item.date),
                   'relationship': item.relationship,
-                  'memory': item.memory,
+                  'sex': item.sex,
+                  'closeness': item.closeness,
+                  'memories': _stringListConverter.encode(item.memories),
                   'imagePath': item.imagePath,
                   'generatedMessage': item.generatedMessage
                 },
             changeListener),
-        _eventDeletionAdapter = DeletionAdapter(
+        _eventEntityDeletionAdapter = DeletionAdapter(
             database,
             'events',
             ['id'],
-            (Event item) => <String, Object?>{
+            (EventEntity item) => <String, Object?>{
                   'id': item.id,
                   'name': item.name,
                   'type': item.type,
                   'date': _dateTimeConverter.encode(item.date),
                   'relationship': item.relationship,
-                  'memory': item.memory,
+                  'sex': item.sex,
+                  'closeness': item.closeness,
+                  'memories': _stringListConverter.encode(item.memories),
                   'imagePath': item.imagePath,
                   'generatedMessage': item.generatedMessage
                 },
@@ -166,23 +172,25 @@ class _$EventDao extends EventDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<Event> _eventInsertionAdapter;
+  final InsertionAdapter<EventEntity> _eventEntityInsertionAdapter;
 
-  final UpdateAdapter<Event> _eventUpdateAdapter;
+  final UpdateAdapter<EventEntity> _eventEntityUpdateAdapter;
 
-  final DeletionAdapter<Event> _eventDeletionAdapter;
+  final DeletionAdapter<EventEntity> _eventEntityDeletionAdapter;
 
   @override
-  Stream<List<Event>> getAllEvents() {
+  Stream<List<EventEntity>> getAllEvents() {
     return _queryAdapter.queryListStream(
         'SELECT * FROM events ORDER BY date ASC',
-        mapper: (Map<String, Object?> row) => Event(
+        mapper: (Map<String, Object?> row) => EventEntity(
             id: row['id'] as String,
             name: row['name'] as String,
             type: row['type'] as String,
             date: _dateTimeConverter.decode(row['date'] as int),
             relationship: row['relationship'] as String,
-            memory: row['memory'] as String?,
+            sex: row['sex'] as String,
+            closeness: row['closeness'] as int,
+            memories: _stringListConverter.decode(row['memories'] as String),
             imagePath: row['imagePath'] as String?,
             generatedMessage: row['generatedMessage'] as String?),
         queryableName: 'events',
@@ -190,20 +198,21 @@ class _$EventDao extends EventDao {
   }
 
   @override
-  Future<void> insertEvent(Event event) async {
-    await _eventInsertionAdapter.insert(event, OnConflictStrategy.abort);
+  Future<void> insertEvent(EventEntity event) async {
+    await _eventEntityInsertionAdapter.insert(event, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> updateEvent(Event event) async {
-    await _eventUpdateAdapter.update(event, OnConflictStrategy.abort);
+  Future<void> updateEvent(EventEntity event) async {
+    await _eventEntityUpdateAdapter.update(event, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> deleteEvent(Event event) async {
-    await _eventDeletionAdapter.delete(event);
+  Future<void> deleteEvent(EventEntity event) async {
+    await _eventEntityDeletionAdapter.delete(event);
   }
 }
 
 // ignore_for_file: unused_element
 final _dateTimeConverter = DateTimeConverter();
+final _stringListConverter = StringListConverter();

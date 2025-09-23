@@ -9,7 +9,7 @@ import '../../events/data/event_dao.dart';
 part 'app_database.g.dart'; // generated code
 
 @TypeConverters([DateTimeConverter])
-@Database(version: 1, entities: [Event])
+@Database(version: 1, entities: [EventEntity])
 abstract class AppDatabase extends FloorDatabase {
   EventDao get eventDao;
 }

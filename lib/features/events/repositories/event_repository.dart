@@ -1,6 +1,7 @@
 import 'package:celebray/features/core/db/app_database_provider.dart';
 import 'package:celebray/features/events/models/event.dart';
 import 'package:celebray/features/core/db/app_database.dart';
+import 'package:celebray/features/reminders/domain/event_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -11,11 +12,13 @@ class EventRepository {
 
   EventRepository(this.db);
 
-  Stream<List<Event>> getAllEvents() => db.eventDao.getAllEvents();
+  Stream<List<EventModel>> getAllEvents() => db.eventDao.getAllEvents().map(
+        (entities) => entities.map((e) => e.toDomain()).toList(),
+      );
 
-  Future<void> addEvent(Event event) => db.eventDao.insertEvent(event);
+  Future<void> addEvent(EventModel event) => db.eventDao.insertEvent(EventEntity.fromDomain(event));
 
-  Future<void> deleteEvent(Event event) => db.eventDao.deleteEvent(event);
+  Future<void> deleteEvent(EventModel event) => db.eventDao.deleteEvent(EventEntity.fromDomain(event));
 }
 
 @riverpod
