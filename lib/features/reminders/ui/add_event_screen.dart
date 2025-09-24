@@ -62,216 +62,233 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          children: [
-            const SizedBox(height: 5),
-            _buildTextField(
-              controller: eventNameController,
-              label: 'Event Name',
-              hint: "e.g. Mike's Birthday, Olu & Dara's Anniversary",
-              icon: Icons.event,
-              onSaved: (v) => name = v ?? '',
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'Please enter an event name' : null,
-            ),
-            const SizedBox(height: 20),
-            InkWell(
-              onTap: () async {
-                // 1️⃣ Pick the date
-                final pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: date,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2100),
-                );
+      child: Column(
+        children: [
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  const SizedBox(height: 5),
+                  _buildTextField(
+                    controller: eventNameController,
+                    label: 'Event Name',
+                    hint: "e.g. Mike's Birthday, Olu & Dara's Anniversary",
+                    icon: Icons.event,
+                    onSaved: (v) => name = v ?? '',
+                    validator: (v) => v == null || v.isEmpty
+                        ? 'Please enter an event name'
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  InkWell(
+                    onTap: () async {
+                      // 1️⃣ Pick the date
+                      final pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: date,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2100),
+                      );
 
-                if (pickedDate != null) {
-                  // 2️⃣ Pick the time
-                  final pickedTime = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(date),
-                  );
+                      if (pickedDate != null) {
+                        // 2️⃣ Pick the time
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.fromDateTime(date),
+                        );
 
-                  if (pickedTime != null) {
-                    // 3️⃣ Combine date + time
-                    final pickedDateTime = DateTime(
-                      pickedDate.year,
-                      pickedDate.month,
-                      pickedDate.day,
-                      pickedTime.hour,
-                      pickedTime.minute,
-                    );
+                        if (pickedTime != null) {
+                          // 3️⃣ Combine date + time
+                          final pickedDateTime = DateTime(
+                            pickedDate.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
 
-                    setState(() => date = pickedDateTime);
+                          setState(() => date = pickedDateTime);
 
-                    // 4️⃣ Format nicely: Wed, May 24 – 3:30 PM
-                    eventDateController.text = dateFormatterDay.format(date);
-                  }
-                }
-              },
+                          // 4️⃣ Format nicely: Wed, May 24 – 3:30 PM
+                          eventDateController.text = dateFormatterDay.format(
+                            date,
+                          );
+                        }
+                      }
+                    },
 
-              splashColor: Colors.blueAccent.withOpacity(0.3),
-              child: _buildTextField(
-                label: 'Select the Event Date',
-                controller: eventDateController,
-                icon: Icons.edit_calendar,
-                onSaved: (v) => date = DateTime.parse(v ?? ''),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Please Select a date' : null,
-                editable: false,
-              ),
-            ),
-            const SizedBox(height: 20),
-            CustomExpansionTile(
-              title: _buildSectionTitle('Event Type'),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: eventTypes.map((type) {
-                  final isSelected = selectedType == type;
-                  return _SelectableChip(
-                    label: type,
-                    isSelected: isSelected,
-                    onTap: () => setState(() => selectedType = type),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            CustomExpansionTile(
-              title: _buildSectionTitle('Relationship'),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: relationships.map((relation) {
-                  final isSelected = selectedRelationship == relation;
-                  return _SelectableChip(
-                    label: relation,
-                    isSelected: isSelected,
-                    onTap: () =>
-                        setState(() => selectedRelationship = relation),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            CustomExpansionTile(
-              title: _buildSectionTitle('Sex'),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: sexs.map((sex) {
-                  final isSelected = selectedSex == sex;
-                  return _SelectableChip(
-                    label: sex,
-                    isSelected: isSelected,
-                    onTap: () => setState(() => selectedSex = sex),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildSectionTitle('How close are you to this person?'),
-            Row(
-              children: [
-                const Text("1", style: TextStyle(fontSize: 12)),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Colors.blueAccent,
-                      inactiveTrackColor: Colors.blueAccent.withOpacity(0.3),
-                      trackHeight: 6.0,
-                      thumbColor: Colors.blue,
-                      overlayColor: Colors.blue.withOpacity(0.2),
-                      valueIndicatorColor: Colors.blueAccent,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 12,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 24,
-                      ),
-                    ),
-                    child: Slider(
-                      value: closeness,
-                      min: 1,
-                      max: 10,
-                      divisions: 9,
-                      label: closeness.round().toString(),
-                      onChanged: (v) => setState(() => closeness = v),
+                    hoverColor: Colors.blueAccent.withOpacity(0.3),
+                    highlightColor: Colors.blueAccent.withOpacity(0.3),
+                    child: _buildTextField(
+                      label: 'Select the Event Date',
+                      controller: eventDateController,
+                      icon: Icons.edit_calendar,
+                      onSaved: (v) => date = DateTime.parse(v ?? ''),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Please Select a date'
+                          : null,
+                      editable: false,
                     ),
                   ),
-                ),
-                const Text("10", style: TextStyle(fontSize: 12)),
-              ],
-            ),
-            Center(
-              child: Text(
-                "Selected: ${closeness.round()}",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+                  const SizedBox(height: 20),
+                  CustomExpansionTile(
+                    title: _buildSectionTitle('Event Type'),
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: eventTypes.map((type) {
+                        final isSelected = selectedType == type;
+                        return _SelectableChip(
+                          label: type,
+                          isSelected: isSelected,
+                          onTap: () => setState(() => selectedType = type),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  CustomExpansionTile(
+                    title: _buildSectionTitle('Relationship'),
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: relationships.map((relation) {
+                        final isSelected = selectedRelationship == relation;
+                        return _SelectableChip(
+                          label: relation,
+                          isSelected: isSelected,
+                          onTap: () =>
+                              setState(() => selectedRelationship = relation),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  CustomExpansionTile(
+                    title: _buildSectionTitle('Sex'),
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: sexs.map((sex) {
+                        final isSelected = selectedSex == sex;
+                        return _SelectableChip(
+                          label: sex,
+                          isSelected: isSelected,
+                          onTap: () => setState(() => selectedSex = sex),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('How close are you to this person?'),
+                  Row(
+                    children: [
+                      const Text("1", style: TextStyle(fontSize: 12)),
+                      Expanded(
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: Colors.blueAccent,
+                            inactiveTrackColor: Colors.blueAccent.withOpacity(
+                              0.3,
+                            ),
+                            trackHeight: 6.0,
+                            thumbColor: Colors.blue,
+                            overlayColor: Colors.blue.withOpacity(0.2),
+                            valueIndicatorColor: Colors.blueAccent,
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 12,
+                            ),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 24,
+                            ),
+                          ),
+                          child: Slider(
+                            value: closeness,
+                            min: 1,
+                            max: 10,
+                            divisions: 9,
+                            label: closeness.round().toString(),
+                            onChanged: (v) => setState(() => closeness = v),
+                          ),
+                        ),
+                      ),
+                      const Text("10", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                  Center(
+                    child: Text(
+                      "Selected: ${closeness.round()}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('Memories (optional)'),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          controller: memoriesController,
+                          label: 'Add Memory',
+                          hint: "e.g. Karaoke night 🎤",
+                          icon: Icons.book,
+                          optional: true,
+                          onSaved:
+                              (
+                                _,
+                              ) {}, // not needed since we manage via controller
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          final text = memoriesController.text.trim();
+                          if (text.isNotEmpty) {
+                            setState(() {
+                              memories.add(text);
+                              memoriesController.clear();
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(12),
+                        ),
+                        child: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: memories.map((m) {
+                      return Chip(
+                        label: Text(m),
+                        deleteIcon: const Icon(Icons.close),
+                        onDeleted: () {
+                          setState(() => memories.remove(m));
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             ),
+          ),
+          const SizedBox(height: 10),
 
-            const SizedBox(height: 20),
-            _buildSectionTitle('Memories (optional)'),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    controller: memoriesController,
-                    label: 'Add Memory',
-                    hint: "e.g. Karaoke night 🎤",
-                    icon: Icons.book,
-                    optional: true,
-                    onSaved:
-                        (_) {}, // not needed since we manage via controller
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    final text = memoriesController.text.trim();
-                    if (text.isNotEmpty) {
-                      setState(() {
-                        memories.add(text);
-                        memoriesController.clear();
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(12),
-                  ),
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: memories.map((m) {
-                return Chip(
-                  label: Text(m),
-                  deleteIcon: const Icon(Icons.close),
-                  onDeleted: () {
-                    setState(() => memories.remove(m));
-                  },
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -300,8 +317,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 }
               },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
