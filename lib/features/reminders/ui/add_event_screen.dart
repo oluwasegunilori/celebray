@@ -35,11 +35,16 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   ];
 
   final List<String> relationships = [
+    'Wife',
+    'Husband',
+    'Boyfriend',
+    'Girlfriend',
     'Friend',
     'Family',
     'Colleague',
     'Best Friend',
-    'Sibling',
+    'Brother',
+    'Sister',
     'Parent',
     'Child',
     'Partner',
