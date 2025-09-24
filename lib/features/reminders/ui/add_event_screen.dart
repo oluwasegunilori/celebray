@@ -1,6 +1,7 @@
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
 import 'package:celebray/features/reminders/ui/ui_utils/custom_designs.dart';
+import 'package:celebray/utils/date_format.dart';
 import 'package:celebray/utils/unique_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +54,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
   final TextEditingController eventNameController = TextEditingController();
   final TextEditingController memoriesController = TextEditingController();
+  final TextEditingController eventDateController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +75,53 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               onSaved: (v) => name = v ?? '',
               validator: (v) =>
                   v == null || v.isEmpty ? 'Please enter an event name' : null,
+            ),
+            const SizedBox(height: 20),
+            InkWell(
+              onTap: () async {
+                // 1️⃣ Pick the date
+                final pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: date,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2100),
+                );
+
+                if (pickedDate != null) {
+                  // 2️⃣ Pick the time
+                  final pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(date),
+                  );
+
+                  if (pickedTime != null) {
+                    // 3️⃣ Combine date + time
+                    final pickedDateTime = DateTime(
+                      pickedDate.year,
+                      pickedDate.month,
+                      pickedDate.day,
+                      pickedTime.hour,
+                      pickedTime.minute,
+                    );
+
+                    setState(() => date = pickedDateTime);
+
+                    // 4️⃣ Format nicely: Wed, May 24 – 3:30 PM
+                    eventDateController.text = dateFormatterDay.format(date);
+                  }
+                }
+              },
+
+              splashColor: Colors.blueAccent.withOpacity(0.3),
+              child: _buildTextField(
+                label: 'Select the Event Date',
+                controller: eventDateController,
+                icon: Icons.edit_calendar,
+                onSaved: (v) => date = DateTime.parse(v ?? ''),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Please Select a date' : null,
+                editable: false,
+              ),
             ),
             const SizedBox(height: 20),
             CustomExpansionTile(
@@ -221,22 +270,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             ),
 
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.calendar_today),
-              label: Text(
-                'Select Event Date: ${date.toLocal().toString().split(' ')[0]}',
-              ),
-              onPressed: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: date,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) setState(() => date = picked);
-              },
-            ),
-            const SizedBox(height: 30),
+
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -285,12 +319,13 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
 Widget _buildTextField({
   required String label,
-  required TextEditingController controller,
+  TextEditingController? controller,
   String? hint,
   IconData? icon,
   bool optional = false,
   FormFieldSetter<String>? onSaved,
   FormFieldValidator<String>? validator,
+  bool editable = true,
 }) {
   return TextFormField(
     controller: controller,
@@ -310,6 +345,7 @@ Widget _buildTextField({
         borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      enabled: editable,
     ),
     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
     onSaved: onSaved,

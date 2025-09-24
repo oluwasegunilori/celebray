@@ -30,48 +30,32 @@ class CustomExpansionTile extends StatelessWidget {
   }
 }
 
-
 class SheetHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onClose;
 
-  const SheetHeader({
-    super.key,
-    required this.title,
-    this.onClose,
-  });
+  const SheetHeader({super.key, required this.title, this.onClose});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         // Drag handle
-        Container(
-          width: 40,
-          height: 4,
-          margin: const EdgeInsets.only(top: 8, bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey[400],
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
               if (onClose != null)
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: onClose,
-                ),
+                IconButton(icon: const Icon(Icons.close), onPressed: onClose),
             ],
           ),
         ),
