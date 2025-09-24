@@ -129,7 +129,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       label: 'Select the Event Date',
                       controller: eventDateController,
                       icon: Icons.edit_calendar,
-                      onSaved: (v) => date = DateTime.parse(v ?? ''),
+                      onSaved: (v) => date = dateFormatterDay.parse(v ?? ''),
                       validator: (v) => v == null || v.isEmpty
                           ? 'Please Select a date'
                           : null,
