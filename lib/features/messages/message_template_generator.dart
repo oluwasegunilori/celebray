@@ -18,6 +18,8 @@ class MessageTemplateGenerator {
         return _funnyMessages(name, type, relationship, memory, daysUntil);
       case 'formal':
         return _formalMessages(name, type, relationship, daysUntil);
+      case 'prayerful':
+        return _prayerfulMessages(name, type, relationship, memory, daysUntil);
       default:
         return _warmMessages(name, type, relationship, memory, daysUntil);
     }
@@ -115,6 +117,35 @@ class MessageTemplateGenerator {
       "Dear $name, please accept my sincere congratulations on your $type. Wishing you continued success and joy.",
       "Happy $type! It is always a pleasure to celebrate the milestones of valued $relationship like yours.",
     ];
+  }
+
+  static List<String> _prayerfulMessages(
+    String name,
+    String type,
+    String relationship,
+    String? memory,
+    int daysUntil,
+  ) {
+    final messages = <String>[
+      "May you be blessed on your $type, $name. Grateful for you and praying for joy, peace, and good things ahead.",
+      "Thinking of you with love today, $name. May this $type be filled with grace and the warmth of people who care about you.",
+    ];
+    if (memory != null) {
+      messages.add(
+        "Happy $type, $name. Thankful for moments like when we $memory — praying this year brings you even more to cherish.",
+      );
+    } else {
+      messages.add(
+        "On your $type, $name, I pray you feel surrounded by love and reminded how deeply you are valued.",
+      );
+    }
+    if (daysUntil == 0) {
+      messages.insert(
+        0,
+        "Today is your $type, $name. May God bless this day and all that is ahead for you.",
+      );
+    }
+    return messages.take(3).toList();
   }
 
   static List<String> _uniqueMessages(List<String> messages) {

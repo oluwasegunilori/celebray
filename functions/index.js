@@ -8,6 +8,8 @@ const {
   relationshipSkill,
   closenessSkill,
   toneLine,
+  religionSkill,
+  lengthSkill,
 } = require("./prompt/load_skills");
 const { assessTouchUpInstructions } = require("./prompt/content_policy");
 
@@ -68,6 +70,7 @@ function eventPayload(body) {
     closeness: body.closeness ?? 5,
     memories: Array.isArray(body.memories) ? body.memories : [],
     tone: body.tone || "warm",
+    faithContext: body.faithContext || "",
   };
 }
 
@@ -91,6 +94,8 @@ ${eventTypeSkill(event.type)}
 ${relationshipSkill(event.relationship)}
 ${closenessSkill(event.closeness)}
 ${toneLine(event.tone)}
+${religionSkill(event.faithContext)}
+${lengthSkill(event.tone, event.faithContext)}
 `.trim();
 }
 
@@ -111,6 +116,8 @@ ${memoryText}
 ${eventTypeSkill(event.type)}
 ${relationshipSkill(event.relationship)}
 ${closenessSkill(event.closeness)}
+${religionSkill(event.faithContext)}
+${lengthSkill(event.tone, event.faithContext)}
 
 Current message:
 "${currentMessage}"

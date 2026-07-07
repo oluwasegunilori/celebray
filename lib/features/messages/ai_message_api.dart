@@ -50,6 +50,7 @@ class AiMessageApi {
       'sex': event.sex,
       'closeness': event.closeness,
       'memories': event.memories,
+      'faithContext': event.faithContext,
       ?'tone': tone,
     };
   }

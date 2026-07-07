@@ -94,6 +94,7 @@ class _EditMessageScreenState extends ConsumerState<EditMessageScreen> {
       memories: event.memories,
       imagePath: event.imagePath,
       generatedMessage: message,
+      faithContext: event.faithContext,
     );
 
     await ref.read(eventProvider.notifier).updateEvent(updated);

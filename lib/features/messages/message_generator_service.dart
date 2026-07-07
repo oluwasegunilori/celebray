@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 
 /// Generates personalized celebration messages via AI with template fallback.
 class MessageGeneratorService {
-  static const _tones = ['warm', 'funny', 'formal'];
+  static const _tones = ['warm', 'funny', 'formal', 'prayerful'];
 
   static List<String> get availableTones => _tones;
 

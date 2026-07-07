@@ -12,6 +12,7 @@ class EventModel extends Equatable {
   final List<String> memories;
   final String? imagePath;
   final String? generatedMessage;
+  final String faithContext;
 
   const EventModel({
     required this.id,
@@ -24,6 +25,7 @@ class EventModel extends Equatable {
     this.memories = const [],
     this.imagePath,
     this.generatedMessage,
+    this.faithContext = '',
   });
 
   @override
@@ -38,5 +40,6 @@ class EventModel extends Equatable {
     memories,
     imagePath,
     generatedMessage,
+    faithContext,
   ];
 }

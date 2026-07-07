@@ -74,9 +74,47 @@ function toneLine(tone) {
       return "REQUESTED TONE: funny — light, playful, kind humor.";
     case "formal":
       return "REQUESTED TONE: formal — polished and respectful.";
+    case "prayerful":
+      return "REQUESTED TONE: prayerful — reverent blessings, gratitude, optional short sacred text; up to 480 characters if needed.";
     default:
       return "REQUESTED TONE: warm — sincere and heartfelt.";
   }
+}
+
+function religionSkill(faithContext) {
+  const faith = String(faithContext || "").trim();
+  if (!faith || faith.toLowerCase() === "none") {
+    return "FAITH CONTEXT: none — keep messages secular unless prayerful tone explicitly asks for general spiritual warmth without specific tradition.";
+  }
+
+  const lower = faith.toLowerCase();
+
+  if (lower.includes("christian")) {
+    return "FAITH CONTEXT: Christianity — blessings, grace, optional short Bible verse with book/chapter reference; accurate quotes only.";
+  }
+  if (lower.includes("islam") || lower.includes("muslim")) {
+    return "FAITH CONTEXT: Islam — barakah, dua, gratitude to Allah; optional short Quran reference or authentic dua; respectful tone.";
+  }
+  if (lower.includes("jew")) {
+    return "FAITH CONTEXT: Judaism — mazel tov, blessings, optional short Psalms or Torah reference; accurate quotes only.";
+  }
+  if (lower.includes("hindu")) {
+    return "FAITH CONTEXT: Hinduism — respectful blessings for joy, prosperity, and well-being; avoid stereotypes.";
+  }
+  if (lower.includes("buddh")) {
+    return "FAITH CONTEXT: Buddhism — peace, compassion, mindfulness; gentle and non-preachy.";
+  }
+
+  return `FAITH CONTEXT: ${faith} — honor this tradition respectfully; prefer accurate short quotes or paraphrased blessings.`;
+}
+
+function lengthSkill(tone, faithContext) {
+  const faith = String(faithContext || "").trim();
+  const hasFaith = faith && faith.toLowerCase() !== "none";
+  if (tone === "prayerful" || hasFaith) {
+    return "LENGTH: up to 480 characters per message when a short sacred quote or blessing is included; otherwise under 320.";
+  }
+  return "LENGTH: under 320 characters per message.";
 }
 
 module.exports = {
@@ -85,4 +123,6 @@ module.exports = {
   relationshipSkill,
   closenessSkill,
   toneLine,
+  religionSkill,
+  lengthSkill,
 };

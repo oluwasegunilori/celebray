@@ -4,12 +4,14 @@ class AppExpansionTile extends StatelessWidget {
   final Widget title;
   final Widget child;
   final bool initiallyExpanded;
+  final ExpansionTileController? controller;
 
   const AppExpansionTile({
     super.key,
     required this.title,
     required this.child,
     this.initiallyExpanded = false,
+    this.controller,
   });
 
   @override
@@ -17,6 +19,7 @@ class AppExpansionTile extends StatelessWidget {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
+        controller: controller,
         title: title,
         tilePadding: EdgeInsets.zero,
         childrenPadding: EdgeInsets.zero,

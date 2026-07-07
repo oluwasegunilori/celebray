@@ -87,6 +87,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
       memories: event.memories,
       imagePath: event.imagePath,
       generatedMessage: message,
+      faithContext: event.faithContext,
     );
     await ref.read(eventProvider.notifier).updateEvent(updated);
     if (mounted) {
@@ -177,16 +178,17 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'warm', label: Text('Warm')),
-                  ButtonSegment(value: 'funny', label: Text('Funny')),
-                  ButtonSegment(value: 'formal', label: Text('Formal')),
-                ],
-                selected: {_selectedTone},
-                onSelectionChanged: (selection) {
-                  setState(() => _selectedTone = selection.first);
-                },
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: MessageGeneratorService.availableTones.map((tone) {
+                  final selected = _selectedTone == tone;
+                  return ChoiceChip(
+                    label: Text(tone[0].toUpperCase() + tone.substring(1)),
+                    selected: selected,
+                    onSelected: (_) => setState(() => _selectedTone = tone),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 20),
               SizedBox(

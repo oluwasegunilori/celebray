@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+enum _AddEventField { name, date, eventType, relationship, sex, closeness }
+
 //Updates and adds new events
 class AddEventScreen extends ConsumerStatefulWidget {
   const AddEventScreen({super.key, this.event, this.initialData});
@@ -25,25 +27,43 @@ class AddEventScreen extends ConsumerStatefulWidget {
 
 class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+  final _nameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _dateFieldKey = GlobalKey<FormFieldState<String>>();
+  final _eventTypeKey = GlobalKey();
+  final _relationshipKey = GlobalKey();
+  final _sexKey = GlobalKey();
+  final _closenessKey = GlobalKey();
+  final _eventTypeController = ExpansionTileController();
+  final _relationshipController = ExpansionTileController();
+  final _sexController = ExpansionTileController();
+  final _faithController = ExpansionTileController();
+
   late String name;
-  late String selectedType;
-  late String selectedRelationship;
-  late String selectedSex;
-  late DateTime date;
+  String? selectedType;
+  String? selectedRelationship;
+  String? selectedSex;
+  String? selectedFaithContext;
+  DateTime? date;
   String? memory;
+  bool _eventTypeManuallySelected = false;
+  _AddEventField? _highlightedField;
 
   final eventTypes = EventFormOptions.eventTypes;
   final relationships = EventFormOptions.relationships;
   final sexs = EventFormOptions.sexOptions;
+  final faithContexts = EventFormOptions.faithContexts;
 
   Future<void> _promptCustomEventType() async {
     final value = await _promptCustomValue(
       title: 'Custom event type',
       hint: 'e.g. Quinceañera, Naming Ceremony',
-      initial: eventTypes.contains(selectedType) ? null : selectedType,
+      initial: selectedType != null && !eventTypes.contains(selectedType)
+          ? selectedType
+          : null,
     );
     if (value != null && value.isNotEmpty && mounted) {
-      setState(() => selectedType = value);
+      _selectEventType(value, manual: true);
     }
   }
 
@@ -51,9 +71,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     final value = await _promptCustomValue(
       title: 'Custom relationship',
       hint: 'e.g. Godparent, Roommate',
-      initial: relationships.contains(selectedRelationship)
-          ? null
-          : selectedRelationship,
+      initial: selectedRelationship != null &&
+              !relationships.contains(selectedRelationship)
+          ? selectedRelationship
+          : null,
     );
     if (value != null && value.isNotEmpty && mounted) {
       _selectRelationship(value);
@@ -103,17 +124,60 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     );
   }
 
+  void _selectEventType(String type, {required bool manual}) {
+    setState(() {
+      selectedType = type;
+      if (manual) _eventTypeManuallySelected = true;
+      _clearFieldError(_AddEventField.eventType);
+    });
+    _eventTypeController.collapse();
+  }
+
+  void _selectSex(String sex) {
+    setState(() {
+      selectedSex = sex;
+      _clearFieldError(_AddEventField.sex);
+    });
+    _sexController.collapse();
+  }
+
+  void _selectFaithContext(String faith) {
+    setState(() => selectedFaithContext = faith);
+    _faithController.collapse();
+  }
+
+  void _maybeInferEventTypeFromName(String value) {
+    if (_seed != null || _eventTypeManuallySelected) return;
+
+    final inferred = EventFormOptions.inferEventTypeFromName(value);
+    if (inferred == null || inferred == selectedType) return;
+
+    setState(() {
+      selectedType = inferred;
+      _clearFieldError(_AddEventField.eventType);
+    });
+  }
+
+  void _clearFieldError(_AddEventField field) {
+    if (_highlightedField == field) {
+      _highlightedField = null;
+    }
+  }
+
   void _selectRelationship(String relation) {
     setState(() {
       selectedRelationship = relation;
       final suggested = EventFormOptions.suggestedSexForRelationship(relation);
       if (suggested != null) {
         selectedSex = suggested;
+        _clearFieldError(_AddEventField.sex);
       }
+      _clearFieldError(_AddEventField.relationship);
     });
+    _relationshipController.collapse();
   }
 
-  double closeness = 5;
+  double? closeness;
 
   List<String> memories = [];
   String? imagePath;
@@ -124,29 +188,456 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   late TextEditingController eventDateController;
   TextEditingController memoriesController = TextEditingController();
 
-  EventModel? get _seed => widget.event ?? widget.initialData;
+  EventModel? get _seed => widget.event;
   bool get _isEditing => widget.event != null;
 
   @override
   void initState() {
     super.initState();
-    eventNameController = TextEditingController(text: _seed?.name ?? '');
-    eventDateController = TextEditingController(
-      text: _seed != null ? dateFormatterDay.format(_seed!.date) : '',
+    final initialData = widget.initialData;
+
+    eventNameController = TextEditingController(
+      text: _seed?.name ?? initialData?.name ?? '',
     );
-    memories = _seed?.memories ?? [];
-    selectedType = _seed?.type ?? eventTypes.first;
-    selectedRelationship = _seed?.relationship ?? relationships.first;
-    name = _seed?.name ?? '';
-    date = _seed?.date ?? _atMidnight(DateTime.now());
-    selectedSex = _seed?.sex ??
-        EventFormOptions.suggestedSexForRelationship(selectedRelationship) ??
-        sexs[0];
-    closeness = _seed?.closeness.toDouble() ?? 5;
+    eventDateController = TextEditingController(
+      text: _seed != null
+          ? dateFormatterDay.format(_seed!.date)
+          : initialData != null
+              ? dateFormatterDay.format(initialData.date)
+              : '',
+    );
+    memories = List<String>.from(_seed?.memories ?? []);
+    name = _seed?.name ?? initialData?.name ?? '';
     imagePath = _seed?.imagePath;
+
+    if (_seed != null) {
+      selectedType = _seed!.type;
+      selectedRelationship = _seed!.relationship;
+      selectedSex = _seed!.sex;
+      selectedFaithContext = _seed!.faithContext.isNotEmpty
+          ? _seed!.faithContext
+          : null;
+      closeness = _seed!.closeness.toDouble();
+      date = _seed!.date;
+      _eventTypeManuallySelected = true;
+    } else if (initialData != null) {
+      selectedType = initialData.type;
+      date = initialData.date;
+    }
+
     if (imagePath != null && !File(imagePath!).existsSync()) {
       imagePath = null;
     }
+
+    if (_seed == null && selectedType == null) {
+      final inferred = EventFormOptions.inferEventTypeFromName(
+        eventNameController.text,
+      );
+      if (inferred != null) {
+        selectedType = inferred;
+      }
+    }
+
+    eventNameController.addListener(() {
+      _maybeInferEventTypeFromName(eventNameController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    eventNameController.dispose();
+    eventDateController.dispose();
+    memoriesController.dispose();
+    _scrollController.dispose();
+    _eventTypeController.dispose();
+    _relationshipController.dispose();
+    _sexController.dispose();
+    _faithController.dispose();
+    super.dispose();
+  }
+
+  _AddEventField? _firstInvalidField() {
+    if (eventNameController.text.trim().isEmpty) {
+      return _AddEventField.name;
+    }
+    if (date == null || eventDateController.text.trim().isEmpty) {
+      return _AddEventField.date;
+    }
+    if (selectedType == null || selectedType!.trim().isEmpty) {
+      return _AddEventField.eventType;
+    }
+    if (selectedRelationship == null || selectedRelationship!.trim().isEmpty) {
+      return _AddEventField.relationship;
+    }
+    if (selectedSex == null || selectedSex!.trim().isEmpty) {
+      return _AddEventField.sex;
+    }
+    if (closeness == null) {
+      return _AddEventField.closeness;
+    }
+    return null;
+  }
+
+  String _missingFieldMessage(_AddEventField field) {
+    switch (field) {
+      case _AddEventField.name:
+        return 'Please enter an event name.';
+      case _AddEventField.date:
+        return 'Please select an event date.';
+      case _AddEventField.eventType:
+        return 'Please select an event type.';
+      case _AddEventField.relationship:
+        return 'Please select a relationship.';
+      case _AddEventField.sex:
+        return 'Please select sex.';
+      case _AddEventField.closeness:
+        return 'Please choose how close you are to this person.';
+    }
+  }
+
+  ExpansionTileController? _controllerForField(_AddEventField field) {
+    switch (field) {
+      case _AddEventField.eventType:
+        return _eventTypeController;
+      case _AddEventField.relationship:
+        return _relationshipController;
+      case _AddEventField.sex:
+        return _sexController;
+      case _AddEventField.name:
+      case _AddEventField.date:
+      case _AddEventField.closeness:
+        return null;
+    }
+  }
+
+  GlobalKey? _keyForField(_AddEventField field) {
+    switch (field) {
+      case _AddEventField.name:
+        return _nameFieldKey;
+      case _AddEventField.date:
+        return _dateFieldKey;
+      case _AddEventField.eventType:
+        return _eventTypeKey;
+      case _AddEventField.relationship:
+        return _relationshipKey;
+      case _AddEventField.sex:
+        return _sexKey;
+      case _AddEventField.closeness:
+        return _closenessKey;
+    }
+  }
+
+  void _scrollToField(_AddEventField field) {
+    if (field == _AddEventField.name || field == _AddEventField.date) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+
+    final targetContext = _keyForField(field)?.currentContext;
+    if (targetContext == null) return;
+
+    Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+      alignment: 0.15,
+    );
+  }
+
+  void _focusInvalidField(_AddEventField field) {
+    if (field == _AddEventField.name || field == _AddEventField.date) {
+      setState(() => _highlightedField = null);
+    } else {
+      setState(() => _highlightedField = field);
+      _controllerForField(field)?.expand();
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      switch (field) {
+        case _AddEventField.name:
+          _nameFieldKey.currentState?.validate();
+        case _AddEventField.date:
+          _dateFieldKey.currentState?.validate();
+        case _AddEventField.eventType:
+        case _AddEventField.relationship:
+        case _AddEventField.sex:
+        case _AddEventField.closeness:
+          break;
+      }
+
+      _scrollToField(field);
+    });
+  }
+
+  bool _validateInScreenOrder() {
+    final invalid = _firstInvalidField();
+    if (invalid == null) {
+      if (_highlightedField != null) {
+        setState(() => _highlightedField = null);
+      }
+      _formKey.currentState!.save();
+      return true;
+    }
+
+    _focusInvalidField(invalid);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_missingFieldMessage(invalid))),
+    );
+    return false;
+  }
+
+  EventModel _buildEventModel() {
+    return EventModel(
+      id: widget.event?.id ?? uniqueId(),
+      name: name,
+      type: selectedType!,
+      date: date!,
+      relationship: selectedRelationship!,
+      memories: memories,
+      sex: selectedSex!,
+      closeness: closeness!.round(),
+      imagePath: _hasValidImage ? imagePath : null,
+      generatedMessage: widget.event?.generatedMessage,
+      faithContext: selectedFaithContext == null ||
+              selectedFaithContext == 'None' ||
+              selectedFaithContext!.trim().isEmpty
+          ? ''
+          : selectedFaithContext!,
+    );
+  }
+
+  Future<bool> _confirmNewEventSummary(EventModel event) async {
+    final faithLabel = event.faithContext.isEmpty
+        ? 'Not specified'
+        : event.faithContext;
+    final memoriesLabel = event.memories.isEmpty
+        ? 'None'
+        : event.memories.join(', ');
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Review your event'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _summaryRow('Name', event.name),
+                  _summaryRow('Date', dateFormatterDay.format(event.date)),
+                  _summaryRow('Type', event.type),
+                  _summaryRow('Relationship', event.relationship),
+                  _summaryRow('Sex', event.sex),
+                  _summaryRow('Closeness', '${event.closeness}/10'),
+                  _summaryRow('Faith context', faithLabel),
+                  _summaryRow('Photo', _hasValidImage ? 'Added' : 'None'),
+                  _summaryRow('Memories', memoriesLabel),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Go back'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Save event'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequiredExpansionSection({
+    required GlobalKey sectionKey,
+    required _AddEventField field,
+    required ExpansionTileController controller,
+    required String title,
+    String? selectedLabel,
+    required Widget child,
+  }) {
+    final hasError = _highlightedField == field;
+
+    return KeyedSubtree(
+      key: sectionKey,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: hasError
+              ? Border.all(color: Theme.of(context).colorScheme.error, width: 1.5)
+              : null,
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: hasError ? 8 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppExpansionTile(
+                controller: controller,
+                title: _buildSectionTitle(
+                  title,
+                  selectedLabel: selectedLabel,
+                  showError: hasError,
+                ),
+                child: child,
+              ),
+              if (hasError)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    _missingFieldMessage(field),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionalExpansionSection({
+    required ExpansionTileController controller,
+    required String title,
+    String? selectedLabel,
+    required Widget child,
+  }) {
+    return AppExpansionTile(
+      controller: controller,
+      title: _buildSectionTitle(
+        title,
+        selectedLabel: selectedLabel,
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildClosenessSection() {
+    final hasError = _highlightedField == _AddEventField.closeness;
+
+    return KeyedSubtree(
+      key: _closenessKey,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: hasError
+              ? Border.all(color: Theme.of(context).colorScheme.error, width: 1.5)
+              : null,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(hasError ? 8 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSectionTitle(
+                'How close are you to this person? (required)',
+                showError: hasError,
+              ),
+              Row(
+                children: [
+                  const Text('1', style: TextStyle(fontSize: 12)),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppTheme.primary,
+                        inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.3),
+                        trackHeight: 6.0,
+                        thumbColor: AppTheme.primaryDark,
+                        overlayColor: AppTheme.primary.withValues(alpha: 0.2),
+                        valueIndicatorColor: AppTheme.primary,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 12,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 24,
+                        ),
+                      ),
+                      child: Slider(
+                        value: closeness ?? 5,
+                        min: 1,
+                        max: 10,
+                        divisions: 9,
+                        label: closeness?.round().toString() ?? '?',
+                        onChanged: (v) => setState(() {
+                          closeness = v;
+                          _clearFieldError(_AddEventField.closeness);
+                        }),
+                      ),
+                    ),
+                  ),
+                  const Text('10', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+              Center(
+                child: Text(
+                  closeness == null
+                      ? 'Slide to choose (1–10)'
+                      : 'Selected: ${closeness!.round()}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: closeness == null
+                        ? Colors.grey.shade600
+                        : AppTheme.black,
+                  ),
+                ),
+              ),
+              if (hasError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _missingFieldMessage(_AddEventField.closeness),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   bool get _hasValidImage =>
@@ -178,9 +669,11 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             child: Form(
               key: _formKey,
               child: ListView(
+                controller: _scrollController,
                 children: [
                   const SizedBox(height: 5),
                   _buildTextField(
+                    fieldKey: _nameFieldKey,
                     controller: eventNameController,
                     label: 'Event Name',
                     hint: "e.g. Mike's Birthday, Olu & Dara's Anniversary",
@@ -196,7 +689,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       // 1️⃣ Pick the date
                       final pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: date,
+                        initialDate: date ?? DateTime.now(),
                         firstDate: DateTime(1900),
                         lastDate: DateTime(2100),
                       );
@@ -204,13 +697,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       if (pickedDate != null) {
                         final pickedTime = await showTimePicker(
                           context: context,
-                          initialTime: _seed != null
-                              ? TimeOfDay.fromDateTime(date)
+                          initialTime: date != null
+                              ? TimeOfDay.fromDateTime(date!)
                               : const TimeOfDay(hour: 0, minute: 0),
                         );
 
                         if (pickedTime != null) {
-                          // 3️⃣ Combine date + time
                           final pickedDateTime = DateTime(
                             pickedDate.year,
                             pickedDate.month,
@@ -219,11 +711,14 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                             pickedTime.minute,
                           );
 
-                          setState(() => date = pickedDateTime);
+                          setState(() {
+                            date = pickedDateTime;
+                            _clearFieldError(_AddEventField.date);
+                          });
 
                           // 4️⃣ Format nicely: Wed, May 24 – 3:30 PM
                           eventDateController.text = dateFormatterDay.format(
-                            date,
+                            date!,
                           );
                         }
                       }
@@ -232,6 +727,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     hoverColor: AppTheme.primary.withValues(alpha: 0.3),
                     highlightColor: AppTheme.primary.withValues(alpha: 0.3),
                     child: _buildTextField(
+                      fieldKey: _dateFieldKey,
                       label: 'Select the Event Date',
                       controller: eventDateController,
                       icon: Icons.edit_calendar,
@@ -251,7 +747,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         imagePath: _hasValidImage ? imagePath : null,
                         size: 72,
                         borderRadius: 12,
-                        fallbackIcon: EventAvatar.iconForEventType(selectedType),
+                        fallbackIcon: EventAvatar.iconForEventType(
+                          selectedType ?? '',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -281,8 +779,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  AppExpansionTile(
-                    title: _buildSectionTitle('Event Type'),
+                  _buildRequiredExpansionSection(
+                    sectionKey: _eventTypeKey,
+                    field: _AddEventField.eventType,
+                    controller: _eventTypeController,
+                    title: 'Event Type (required)',
+                    selectedLabel: selectedType,
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
@@ -295,7 +797,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                           return _SelectableChip(
                             label: type,
                             isSelected: isSelected,
-                            onTap: () => setState(() => selectedType = type),
+                            onTap: () => _selectEventType(type, manual: true),
                           );
                         }),
                         _SelectableChip(
@@ -309,8 +811,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   ),
 
                   const SizedBox(height: 20),
-                  AppExpansionTile(
-                    title: _buildSectionTitle('Relationship'),
+                  _buildRequiredExpansionSection(
+                    sectionKey: _relationshipKey,
+                    field: _AddEventField.relationship,
+                    controller: _relationshipController,
+                    title: 'Relationship (required)',
+                    selectedLabel: selectedRelationship,
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
@@ -336,8 +842,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  AppExpansionTile(
-                    title: _buildSectionTitle('Sex'),
+                  _buildRequiredExpansionSection(
+                    sectionKey: _sexKey,
+                    field: _AddEventField.sex,
+                    controller: _sexController,
+                    title: 'Sex (required)',
+                    selectedLabel: selectedSex,
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
@@ -346,54 +856,31 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         return _SelectableChip(
                           label: sex,
                           isSelected: isSelected,
-                          onTap: () => setState(() => selectedSex = sex),
+                          onTap: () => _selectSex(sex),
                         );
                       }).toList(),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _buildSectionTitle('How close are you to this person?'),
-                  Row(
-                    children: [
-                      const Text("1", style: TextStyle(fontSize: 12)),
-                      Expanded(
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: AppTheme.primary,
-                            inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.3),
-                            trackHeight: 6.0,
-                            thumbColor: AppTheme.primaryDark,
-                            overlayColor: AppTheme.primary.withValues(alpha: 0.2),
-                            valueIndicatorColor: AppTheme.primary,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 12,
-                            ),
-                            overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 24,
-                            ),
-                          ),
-                          child: Slider(
-                            value: closeness,
-                            min: 1,
-                            max: 10,
-                            divisions: 9,
-                            label: closeness.round().toString(),
-                            onChanged: (v) => setState(() => closeness = v),
-                          ),
-                        ),
-                      ),
-                      const Text("10", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  Center(
-                    child: Text(
-                      "Selected: ${closeness.round()}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  _buildOptionalExpansionSection(
+                    controller: _faithController,
+                    title: 'Faith context (optional)',
+                    selectedLabel: selectedFaithContext,
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: faithContexts.map((faith) {
+                        final isSelected = selectedFaithContext == faith;
+                        return _SelectableChip(
+                          label: faith,
+                          isSelected: isSelected,
+                          onTap: () => _selectFaithContext(faith),
+                        );
+                      }).toList(),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  _buildClosenessSection(),
 
                   const SizedBox(height: 20),
                   _buildSectionTitle('Memories (optional)'),
@@ -468,28 +955,20 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  final event = EventModel(
-                    id: widget.event?.id ?? uniqueId(),
-                    name: name,
-                    type: selectedType,
-                    date: date,
-                    relationship: selectedRelationship,
-                    memories: memories,
-                    sex: selectedSex,
-                    closeness: closeness.round(),
-                    imagePath: _hasValidImage ? imagePath : null,
-                    generatedMessage: widget.event?.generatedMessage,
-                  );
-                  if (_isEditing) {
-                    await eventNotifier.updateEvent(event);
-                  } else {
-                    await eventNotifier.addEvent(event);
-                  }
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
+                if (!_validateInScreenOrder()) return;
+
+                final event = _buildEventModel();
+
+                if (_isEditing) {
+                  await eventNotifier.updateEvent(event);
+                } else {
+                  final confirmed = await _confirmNewEventSummary(event);
+                  if (!confirmed) return;
+                  await eventNotifier.addEvent(event);
+                }
+
+                if (context.mounted) {
+                  Navigator.pop(context);
                 }
               },
             ),
@@ -500,18 +979,60 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(
+    String title, {
+    String? selectedLabel,
+    bool showError = false,
+  }) {
+    final trimmedSelection = selectedLabel?.trim();
+    final hasSelection =
+        trimmedSelection != null && trimmedSelection.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: showError ? Theme.of(context).colorScheme.error : null,
+                  ),
+                ),
+                if (hasSelection)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      trimmedSelection,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (showError)
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.error,
+              size: 20,
+            ),
+        ],
       ),
     );
   }
 }
 
 Widget _buildTextField({
+  Key? fieldKey,
   required String label,
   TextEditingController? controller,
   String? hint,
@@ -522,6 +1043,7 @@ Widget _buildTextField({
   bool editable = true,
 }) {
   return TextFormField(
+    key: fieldKey,
     controller: controller,
     decoration: InputDecoration(
       labelText: optional ? '$label (optional)' : label,
@@ -606,6 +1128,3 @@ class _SelectableChip extends StatelessWidget {
     );
   }
 }
-
-DateTime _atMidnight(DateTime value) =>
-    DateTime(value.year, value.month, value.day);

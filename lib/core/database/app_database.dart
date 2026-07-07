@@ -20,7 +20,7 @@ class AppDatabase {
 
     final database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -33,9 +33,17 @@ class AppDatabase {
             closeness INTEGER NOT NULL,
             memories TEXT NOT NULL,
             imagePath TEXT,
-            generatedMessage TEXT
+            generatedMessage TEXT,
+            faithContext TEXT NOT NULL DEFAULT ''
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE $_tableName ADD COLUMN faithContext TEXT NOT NULL DEFAULT ''",
+          );
+        }
       },
     );
 
@@ -110,6 +118,7 @@ class AppDatabase {
       memories: memories,
       imagePath: row['imagePath'] as String?,
       generatedMessage: row['generatedMessage'] as String?,
+      faithContext: row['faithContext'] as String? ?? '',
     );
   }
 
@@ -125,6 +134,7 @@ class AppDatabase {
       'memories': json.encode(event.memories),
       'imagePath': event.imagePath,
       'generatedMessage': event.generatedMessage,
+      'faithContext': event.faithContext,
     };
   }
 }

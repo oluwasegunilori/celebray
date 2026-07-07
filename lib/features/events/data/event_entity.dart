@@ -11,6 +11,7 @@ class EventEntity {
   final List<String> memories;
   final String? imagePath;
   final String? generatedMessage;
+  final String faithContext;
 
   const EventEntity({
     required this.id,
@@ -23,6 +24,7 @@ class EventEntity {
     this.memories = const [],
     this.imagePath,
     this.generatedMessage,
+    this.faithContext = '',
   });
 
   EventModel toDomain() => EventModel(
@@ -36,6 +38,7 @@ class EventEntity {
         memories: memories,
         imagePath: imagePath,
         generatedMessage: generatedMessage,
+        faithContext: faithContext,
       );
 
   factory EventEntity.fromDomain(EventModel event) => EventEntity(
@@ -49,5 +52,6 @@ class EventEntity {
         memories: event.memories,
         imagePath: event.imagePath,
         generatedMessage: event.generatedMessage,
+        faithContext: event.faithContext,
       );
 }

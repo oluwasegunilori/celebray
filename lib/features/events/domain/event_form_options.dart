@@ -77,6 +77,16 @@ class EventFormOptions {
 
   static const sexOptions = ['Female', 'Male', 'Other'];
 
+  static const faithContexts = [
+    'None',
+    'Christianity',
+    'Islam',
+    'Judaism',
+    'Hinduism',
+    'Buddhism',
+    'Other',
+  ];
+
   static const _masculineRelationships = {
     'Husband',
     'Boyfriend',
@@ -125,6 +135,54 @@ class EventFormOptions {
       options.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     }
     return options;
+  }
+
+  /// Infers an event type when the name contains a recognizable cue.
+  static String? inferEventTypeFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.trim().isEmpty) return null;
+
+    const keywordCues = <String, String>{
+      'baby shower': 'Baby Shower',
+      'work anniversary': 'Work Anniversary',
+      'first day of school': 'First Day of School',
+      'sobriety milestone': 'Sobriety Milestone',
+      'bar mitzvah': 'Bar Mitzvah',
+      'bat mitzvah': 'Bat Mitzvah',
+      'bridal shower': 'Bridal Shower',
+      'housewarming': 'Housewarming',
+      'anniversary': 'Anniversary',
+      'graduation': 'Graduation',
+      'engagement': 'Engagement',
+      'retirement': 'Retirement',
+      'promotion': 'Promotion',
+      'memorial': 'Memorial',
+      'funeral': 'Memorial',
+      'birthday': 'Birthday',
+      'bday': 'Birthday',
+      'baptism': 'Baptism',
+      'confirmation': 'Confirmation',
+      'wedding': 'Wedding',
+      'farewell': 'Farewell',
+      'reunion': 'Reunion',
+      'adoption': 'Adoption Day',
+      'launch day': 'Launch Day',
+      'moving day': 'Moving Day',
+      'new baby': 'New Baby',
+    };
+
+    final sortedCues = keywordCues.entries.toList()
+      ..sort((a, b) => b.key.length.compareTo(a.key.length));
+
+    for (final cue in sortedCues) {
+      if (lower.contains(cue.key)) return cue.value;
+    }
+
+    for (final type in eventTypes) {
+      if (lower.contains(type.toLowerCase())) return type;
+    }
+
+    return null;
   }
 
   /// Returns [Male], [Female], or null when gender should not be auto-set.
