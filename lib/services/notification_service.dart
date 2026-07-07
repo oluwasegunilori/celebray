@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:celebray/constants/app_constants.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
 import 'package:celebray/utils/event_date_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -31,7 +30,7 @@ class NotificationService {
     );
 
     await _plugin.initialize(
-      settings: const InitializationSettings(
+      const InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
@@ -131,9 +130,11 @@ class NotificationService {
       if (!schedule.when.isAfter(now)) continue;
 
       await _plugin.zonedSchedule(
-        id: _notificationId(event.id, schedule.suffix),
-        scheduledDate: tz.TZDateTime.from(schedule.when, tz.local),
-        notificationDetails: NotificationDetails(
+        _notificationId(event.id, schedule.suffix),
+        schedule.title,
+        schedule.body,
+        tz.TZDateTime.from(schedule.when, tz.local),
+        NotificationDetails(
           android: AndroidNotificationDetails(
             AppConstants.notificationChannelId,
             AppConstants.notificationChannelName,
@@ -144,15 +145,13 @@ class NotificationService {
           iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        title: schedule.title,
-        body: schedule.body,
       );
     }
   }
 
   static Future<void> cancelEventReminders(String eventId) async {
-    await _plugin.cancel(id: _notificationId(eventId, 'advance'));
-    await _plugin.cancel(id: _notificationId(eventId, 'dayof'));
+    await _plugin.cancel(_notificationId(eventId, 'advance'));
+    await _plugin.cancel(_notificationId(eventId, 'dayof'));
   }
 
   static Future<void> rescheduleAll(List<EventModel> events) async {

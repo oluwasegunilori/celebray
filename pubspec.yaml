@@ -27,6 +27,7 @@ dependencies:
   riverpod_annotation: ^4.0.3
   uuid: ^4.5.3
   intl: ^0.20.3
+  timeago: ^3.7.1
   flutter_local_notifications: ^19.0.0
   timezone: ^0.10.0
   table_calendar: ^3.2.0
@@ -53,14 +54,14 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/app_icon.png
-  adaptive_icon_background: "#E91E63"
+  adaptive_icon_background: "#111111"
   adaptive_icon_foreground: assets/app_icon.png
 
 flutter_native_splash:
-  color: "#E91E63"
+  color: "#FFFFFF"
   image: assets/app_icon.png
   android_12:
-    color: "#E91E63"
+    color: "#FFFFFF"
     image: assets/app_icon.png
 
 flutter:

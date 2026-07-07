@@ -1,4 +1,5 @@
 import 'package:celebray/features/signin/sign_in_screen.dart';
+import 'package:celebray/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -91,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _currentIndex == i ? Colors.pink : Colors.grey,
+                          color: _currentIndex == i ? AppTheme.accent : Colors.grey,
                         ),
                       ),
                     ),
@@ -141,7 +142,7 @@ class OnboardPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(image, size: 100, color: Colors.pink),
+            Icon(image, size: 100, color: AppTheme.black),
             SizedBox(height: 40),
             Text(
               title,

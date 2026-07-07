@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:celebray/app_theme.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
+import 'package:celebray/features/reminders/ui/ui_utils/event_avatar.dart';
 import 'package:celebray/features/reminders/ui/ui_utils/custom_designs.dart';
 import 'package:celebray/utils/date_format.dart';
 import 'package:celebray/utils/unique_keys.dart';
@@ -88,7 +89,13 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     selectedSex = widget.event?.sex ?? sexs[0];
     closeness = widget.event?.closeness.toDouble() ?? 5;
     imagePath = widget.event?.imagePath;
+    if (imagePath != null && !File(imagePath!).existsSync()) {
+      imagePath = null;
+    }
   }
+
+  bool get _hasValidImage =>
+      imagePath != null && File(imagePath!).existsSync();
 
   Future<void> _pickImage(ImageSource source) async {
     final picked = await _imagePicker.pickImage(
@@ -184,26 +191,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      if (imagePath != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            File(imagePath!),
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryLight,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.person, color: AppTheme.primary),
-                        ),
+                      EventAvatar(
+                        imagePath: _hasValidImage ? imagePath : null,
+                        size: 72,
+                        borderRadius: 12,
+                        fallbackIcon: EventAvatar.iconForEventType(selectedType),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -223,7 +216,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                           ],
                         ),
                       ),
-                      if (imagePath != null)
+                      if (_hasValidImage)
                         IconButton(
                           onPressed: _removeImage,
                           icon: const Icon(Icons.close, color: Colors.red),
@@ -409,7 +402,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     memories: memories,
                     sex: selectedSex,
                     closeness: closeness.round(),
-                    imagePath: imagePath,
+                    imagePath: _hasValidImage ? imagePath : null,
                     generatedMessage: widget.event?.generatedMessage,
                   );
                   if (widget.event != null) {
@@ -494,7 +487,7 @@ class _SelectableChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.grey.shade200,
+          color: isSelected ? AppTheme.black : AppTheme.surfaceMuted,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -503,7 +496,7 @@ class _SelectableChip extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
+                color: isSelected ? Colors.white : AppTheme.black,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),

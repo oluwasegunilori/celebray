@@ -57,11 +57,11 @@ class GreetingCardWidget extends StatelessWidget {
   });
 
   static const cardGradients = [
-    [Color(0xFFE91E63), Color(0xFFAD1457)],
-    [Color(0xFF7B1FA2), Color(0xFF4A148C)],
-    [Color(0xFF00838F), Color(0xFF006064)],
-    [Color(0xFFF57C00), Color(0xFFE65100)],
-    [Color(0xFF388E3C), Color(0xFF1B5E20)],
+    [Color(0xFF111111), Color(0xFF333333)],
+    [Color(0xFFD4A017), Color(0xFF9A7209)],
+    [Color(0xFF111111), Color(0xFFD4A017)],
+    [Color(0xFF2D2D2D), Color(0xFF111111)],
+    [Color(0xFF4A4A4A), Color(0xFF111111)],
   ];
 
   @override

@@ -80,7 +80,7 @@ class MessageGeneratorService {
     return [
       "Warmest wishes on your $type, $name. May this special day bring you happiness and fulfillment.",
       "Dear $name, please accept my sincere congratulations on your $type. Wishing you continued success and joy.",
-      "Happy $type! It is always a pleasure to celebrate the milestones of valued $relationships like yours.",
+      "Happy $type! It is always a pleasure to celebrate the milestones of valued $relationship like yours.",
     ];
   }
 

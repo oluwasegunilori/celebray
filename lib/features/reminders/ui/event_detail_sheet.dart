@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:celebray/app_theme.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
+import 'package:celebray/features/reminders/ui/ui_utils/event_avatar.dart';
 import 'package:celebray/features/reminders/ui/ui_utils/reminder_item_card.dart';
 import 'package:celebray/services/share_service.dart';
 import 'package:celebray/utils/date_format.dart';
@@ -36,12 +35,16 @@ class EventDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final next = EventDateUtils.nextOccurrence(event.date);
+    final actualDate = dateFormatterDay.format(next);
     final daysUntil = EventDateUtils.daysUntilNext(event.date);
-    final countdown = daysUntil == 0
-        ? 'Today!'
-        : daysUntil == 1
-            ? 'Tomorrow'
-            : 'In $daysUntil days';
+    final badge = daysUntil <= 7
+        ? (daysUntil == 0
+            ? 'Today'
+            : daysUntil == 1
+                ? 'Tomorrow'
+                : 'In $daysUntil days')
+        : null;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -67,30 +70,23 @@ class EventDetailSheet extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (event.imagePath != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Image.file(
-                        File(event.imagePath!),
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  else
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: AppTheme.primaryLight,
-                      child: const Icon(Icons.celebration, color: AppTheme.primary),
-                    ),
+                  EventAvatar(
+                    imagePath: event.imagePath,
+                    size: 56,
+                    borderRadius: 28,
+                    fallbackIcon: EventAvatar.iconForEventType(event.type),
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          event.name,
+                          event.name.isNotEmpty ? event.name : event.type,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -98,17 +94,24 @@ class EventDetailSheet extends ConsumerWidget {
                         ),
                         Text(
                           event.type,
-                          style: TextStyle(
-                            color: AppTheme.primary,
+                          style: const TextStyle(
+                            color: AppTheme.accent,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (badge != null) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Chip(
+                              label: Text(badge),
+                              backgroundColor: AppTheme.primaryLight,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                  Chip(
-                    label: Text(countdown),
-                    backgroundColor: AppTheme.primaryLight,
                   ),
                 ],
               ),
@@ -116,7 +119,7 @@ class EventDetailSheet extends ConsumerWidget {
               _DetailRow(
                 icon: Icons.calendar_today,
                 label: 'Date',
-                value: dateFormatterDay.format(event.date),
+                value: actualDate,
               ),
               _DetailRow(
                 icon: Icons.people,

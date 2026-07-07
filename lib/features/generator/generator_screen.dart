@@ -16,7 +16,7 @@ class GeneratorScreen extends ConsumerStatefulWidget {
 }
 
 class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
-  EventModel? _selectedEvent;
+  String? _selectedEventId;
   String _selectedTone = 'warm';
   int _selectedMessageIndex = 0;
   int _cardThemeIndex = 0;
@@ -26,37 +26,43 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedEvent = widget.initialEvent;
+    _selectedEventId = widget.initialEvent?.id;
   }
 
-  void _generateMessages() {
-    if (_selectedEvent == null) return;
+  EventModel? _selectedFrom(List<EventModel> events) {
+    if (_selectedEventId == null) return null;
+    for (final event in events) {
+      if (event.id == _selectedEventId) return event;
+    }
+    return null;
+  }
+
+  void _generateMessages(EventModel event) {
     setState(() {
       _messages = MessageGeneratorService.generateMessages(
-        _selectedEvent!,
+        event,
         tone: _selectedTone,
       );
       _selectedMessageIndex = 0;
     });
   }
 
-  Future<void> _saveMessage() async {
-    if (_selectedEvent == null || _messages.isEmpty) return;
+  Future<void> _saveMessage(EventModel event) async {
+    if (_messages.isEmpty) return;
     final message = _messages[_selectedMessageIndex];
     final updated = EventModel(
-      id: _selectedEvent!.id,
-      name: _selectedEvent!.name,
-      type: _selectedEvent!.type,
-      date: _selectedEvent!.date,
-      relationship: _selectedEvent!.relationship,
-      sex: _selectedEvent!.sex,
-      closeness: _selectedEvent!.closeness,
-      memories: _selectedEvent!.memories,
-      imagePath: _selectedEvent!.imagePath,
+      id: event.id,
+      name: event.name,
+      type: event.type,
+      date: event.date,
+      relationship: event.relationship,
+      sex: event.sex,
+      closeness: event.closeness,
+      memories: event.memories,
+      imagePath: event.imagePath,
       generatedMessage: message,
     );
     await ref.read(eventProvider.notifier).updateEvent(updated);
-    setState(() => _selectedEvent = updated);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Message saved to event')),
@@ -64,10 +70,10 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
     }
   }
 
-  Future<void> _shareCard() async {
-    if (_selectedEvent == null || _messages.isEmpty) return;
+  Future<void> _shareCard(EventModel event) async {
+    if (_messages.isEmpty) return;
     await ShareService.shareGreetingCard(
-      event: _selectedEvent!,
+      event: event,
       cardKey: _cardKey,
     );
   }
@@ -89,12 +95,14 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
       body: eventsAsync.when(
         data: (events) {
           if (events.isEmpty) {
-            return _EmptyState(
+            return const _EmptyState(
               icon: Icons.auto_awesome,
               title: 'No events yet',
               subtitle: 'Add a celebration first, then generate a message.',
             );
           }
+
+          final selectedEvent = _selectedFrom(events);
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -104,8 +112,8 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<EventModel>(
-                value: _selectedEvent,
+              DropdownButtonFormField<String>(
+                value: selectedEvent?.id,
                 decoration: const InputDecoration(
                   labelText: 'Event',
                   border: OutlineInputBorder(),
@@ -113,14 +121,18 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                 items: events
                     .map(
                       (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text('${e.name} — ${e.type}'),
+                        value: e.id,
+                        child: Text(
+                          e.name.isNotEmpty
+                              ? '${e.name} — ${e.type}'
+                              : e.type,
+                        ),
                       ),
                     )
                     .toList(),
-                onChanged: (event) {
+                onChanged: (eventId) {
                   setState(() {
-                    _selectedEvent = event;
+                    _selectedEventId = eventId;
                     _messages = [];
                   });
                 },
@@ -146,12 +158,14 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _selectedEvent != null ? _generateMessages : null,
+                  onPressed: selectedEvent != null
+                      ? () => _generateMessages(selectedEvent)
+                      : null,
                   icon: const Icon(Icons.auto_awesome),
                   label: const Text('Generate Messages'),
                 ),
               ),
-              if (_messages.isNotEmpty) ...[
+              if (_messages.isNotEmpty && selectedEvent != null) ...[
                 const SizedBox(height: 24),
                 const Text(
                   'Pick a message',
@@ -170,14 +184,14 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _saveMessage,
+                        onPressed: () => _saveMessage(selectedEvent),
                         child: const Text('Save to Event'),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _shareCard,
+                        onPressed: () => _shareCard(selectedEvent),
                         child: const Text('Share Card'),
                       ),
                     ),
@@ -197,10 +211,14 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                         onTap: () => setState(() => _cardThemeIndex = i),
                         child: CircleAvatar(
                           radius: 16,
-                          backgroundColor: GreetingCardWidget
-                              .cardGradients[i % 5][0],
+                          backgroundColor:
+                              GreetingCardWidget.cardGradients[i % 5][0],
                           child: _cardThemeIndex == i
-                              ? const Icon(Icons.check, size: 16, color: Colors.white)
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 16,
+                                  color: Colors.white,
+                                )
                               : null,
                         ),
                       ),
@@ -212,7 +230,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                   child: RepaintBoundary(
                     key: _cardKey,
                     child: GreetingCardWidget(
-                      event: _selectedEvent!,
+                      event: selectedEvent,
                       message: _messages[_selectedMessageIndex],
                       themeIndex: _cardThemeIndex,
                     ),
