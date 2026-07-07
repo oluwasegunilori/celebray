@@ -76,6 +76,16 @@ function toneLine(tone) {
       return "REQUESTED TONE: formal — polished and respectful.";
     case "prayerful":
       return "REQUESTED TONE: prayerful — reverent blessings, gratitude, optional short sacred text; up to 480 characters if needed.";
+    case "romantic":
+      return "REQUESTED TONE: romantic — loving, affectionate, suited to partners and close bonds; tasteful, never explicit.";
+    case "casual":
+      return "REQUESTED TONE: casual — relaxed, text-a-friend energy; natural and easy.";
+    case "brief":
+      return "REQUESTED TONE: brief — short and punchy; one or two sentences max.";
+    case "heartfelt":
+      return "REQUESTED TONE: heartfelt — deep, sincere emotion; vulnerable but not cheesy.";
+    case "poetic":
+      return "REQUESTED TONE: poetic — lyrical and beautiful; light imagery, still shareable.";
     default:
       return "REQUESTED TONE: warm — sincere and heartfelt.";
   }
@@ -111,6 +121,9 @@ function religionSkill(faithContext) {
 function lengthSkill(tone, faithContext) {
   const faith = String(faithContext || "").trim();
   const hasFaith = faith && faith.toLowerCase() !== "none";
+  if (tone === "brief") {
+    return "LENGTH: under 120 characters per message — very short, shareable one-liners.";
+  }
   if (tone === "prayerful" || hasFaith) {
     return "LENGTH: up to 480 characters per message when a short sacred quote or blessing is included; otherwise under 320.";
   }

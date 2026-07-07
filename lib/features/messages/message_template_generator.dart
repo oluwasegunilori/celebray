@@ -20,6 +20,16 @@ class MessageTemplateGenerator {
         return _formalMessages(name, type, relationship, daysUntil);
       case 'prayerful':
         return _prayerfulMessages(name, type, relationship, memory, daysUntil);
+      case 'romantic':
+        return _romanticMessages(name, type, relationship, memory, daysUntil);
+      case 'casual':
+        return _casualMessages(name, type, relationship, memory, daysUntil);
+      case 'brief':
+        return _briefMessages(name, type, relationship, daysUntil);
+      case 'heartfelt':
+        return _heartfeltMessages(name, type, relationship, memory, daysUntil);
+      case 'poetic':
+        return _poeticMessages(name, type, relationship, daysUntil);
       default:
         return _warmMessages(name, type, relationship, memory, daysUntil);
     }
@@ -146,6 +156,83 @@ class MessageTemplateGenerator {
       );
     }
     return messages.take(3).toList();
+  }
+
+  static List<String> _romanticMessages(
+    String name,
+    String type,
+    String relationship,
+    String? memory,
+    int daysUntil,
+  ) {
+    return [
+      "Happy $type, my love. You make ordinary days feel like celebrations — today is all about you, $name. 💕",
+      "To my favorite person: happy $type! Grateful every day that you're my $relationship.",
+      if (memory != null)
+        "Happy $type, $name. From $memory to today — I fall for you a little more each time. ❤️"
+      else
+        "Happy $type, $name. Here's to you, to us, and to every beautiful moment still ahead.",
+    ];
+  }
+
+  static List<String> _casualMessages(
+    String name,
+    String type,
+    String relationship,
+    String? memory,
+    int daysUntil,
+  ) {
+    return [
+      "Happy $type, $name! Hope it's a good one 🎉",
+      "It's your $type — go enjoy it, $name. You deserve a great day.",
+      if (memory != null)
+        "Happy $type! Still think about $memory — we need a repeat soon, $name."
+      else
+        "Hey $name, happy $type! Catch up soon?",
+    ];
+  }
+
+  static List<String> _briefMessages(
+    String name,
+    String type,
+    String relationship,
+    int daysUntil,
+  ) {
+    return [
+      "Happy $type, $name! 🎉",
+      "Wishing you the best $type, $name!",
+      if (daysUntil == 0) "Today's your day, $name — happy $type!" else "Happy $type, $name!",
+    ];
+  }
+
+  static List<String> _heartfeltMessages(
+    String name,
+    String type,
+    String relationship,
+    String? memory,
+    int daysUntil,
+  ) {
+    return [
+      "Happy $type, $name. You mean more to me than I say out loud — I'm lucky to have you in my life.",
+      "On your $type, $name, I want you to know how deeply you're loved and appreciated.",
+      if (memory != null)
+        "Happy $type, $name. I'll always cherish $memory — thank you for being you."
+      else
+        "Happy $type, $name. You bring so much light to the people around you.",
+    ];
+  }
+
+  static List<String> _poeticMessages(
+    String name,
+    String type,
+    String relationship,
+    int daysUntil,
+  ) {
+    return [
+      "Happy $type, $name — may this day unfold like a small gift, one moment of joy at a time.",
+      "On your $type, $name, the calendar marks a date; the heart marks someone irreplaceable.",
+      "Happy $type, $name. Another year, another chapter — may yours be written in kindness and light.",
+    ];
   }
 
   static List<String> _uniqueMessages(List<String> messages) {

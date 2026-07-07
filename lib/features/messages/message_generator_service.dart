@@ -5,14 +5,13 @@ import 'package:celebray/features/messages/ai_debug_log.dart';
 import 'package:celebray/features/messages/ai_message_api.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_template_generator.dart';
+import 'package:celebray/features/messages/message_tones.dart';
 import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:intl/intl.dart';
 
 /// Generates personalized celebration messages via AI with template fallback.
 class MessageGeneratorService {
-  static const _tones = ['warm', 'funny', 'formal', 'prayerful'];
-
-  static List<String> get availableTones => _tones;
+  static List<String> get availableTones => MessageTones.all;
 
   static Future<MessageGenerationResult> generateMessages(
     EventModel event, {

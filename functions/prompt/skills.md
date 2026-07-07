@@ -6,7 +6,7 @@ Messages should feel human, specific, and ready to share — not like a greeting
 ## Always do
 
 - Use the person's name naturally (usually first name).
-- Match the requested tone: warm, funny, or formal.
+- Match the requested tone (warm, funny, formal, prayerful, romantic, casual, brief, heartfelt, or poetic).
 - Scale intimacy to closeness (1–10): low = polite; high = personal and heartfelt.
 - Match the relationship (friend vs boss vs partner vs family).
 - Match the event type (birthday vs memorial vs promotion, etc.).
@@ -38,6 +38,11 @@ Messages should feel human, specific, and ready to share — not like a greeting
 - **funny**: light, playful, kind humor — never mean or embarrassing
 - **formal**: polished, respectful, professional warmth
 - **prayerful**: gentle blessings, gratitude to God, short prayers or sacred text — reverent, not preachy
+- **romantic**: loving and affectionate for partners and close bonds — tasteful, never explicit
+- **casual**: relaxed, natural, like texting a friend
+- **brief**: very short — one or two sentences, under 120 characters
+- **heartfelt**: deep sincerity and emotion — personal without being flowery
+- **poetic**: lyrical, gentle imagery — beautiful but still easy to send in a text
 
 ## Faith context (only when provided in the request)
 

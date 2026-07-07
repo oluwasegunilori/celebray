@@ -7,7 +7,7 @@
 - Reminders list with rich event profiles (relationship, closeness, memories)
 - Calendar view of upcoming celebrations
 - Local notifications at midnight on the celebration day
-- AI-style message generator (warm, funny, formal tones)
+- AI-style message generator (9 tones: warm, funny, formal, prayerful, romantic, casual, brief, heartfelt, poetic)
 - Shareable greeting cards as PNG
 - Optional Google / Apple sign-in
 - Photo attachments for events

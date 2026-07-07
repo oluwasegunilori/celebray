@@ -6,7 +6,9 @@ import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_generator_service.dart';
+import 'package:celebray/features/messages/message_tones.dart';
 import 'package:celebray/features/messages/widgets/message_generation_notice.dart';
+import 'package:celebray/features/messages/widgets/tone_picker.dart';
 import 'package:celebray/features/sharing/models/card_style.dart';
 import 'package:celebray/features/sharing/share_service.dart';
 import 'package:celebray/features/sharing/widgets/card_alignment_picker.dart';
@@ -27,7 +29,6 @@ class GeneratorScreen extends ConsumerStatefulWidget {
 
 class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
   String? _selectedEventId;
-  String _selectedTone = 'warm';
   int _selectedMessageIndex = 0;
   int _cardColorIndex = 0;
   int _cardTypographyIndex = 0;
@@ -37,11 +38,19 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
   String? _generationNotice;
   MessageGenerationSource? _generationSource;
   final _cardKey = GlobalKey();
+  late final ValueNotifier<String> _toneNotifier;
 
   @override
   void initState() {
     super.initState();
+    _toneNotifier = ValueNotifier(MessageTones.defaultTone);
     _selectedEventId = widget.initialEvent?.id;
+  }
+
+  @override
+  void dispose() {
+    _toneNotifier.dispose();
+    super.dispose();
   }
 
   EventModel? _selectedFrom(List<EventModel> events) {
@@ -61,7 +70,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
 
     final result = await MessageGeneratorService.generateMessages(
       event,
-      tone: _selectedTone,
+      tone: _toneNotifier.value,
     );
 
     if (!mounted) return;
@@ -176,23 +185,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                 },
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Tone',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: MessageGeneratorService.availableTones.map((tone) {
-                  final selected = _selectedTone == tone;
-                  return ChoiceChip(
-                    label: Text(tone[0].toUpperCase() + tone.substring(1)),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _selectedTone = tone),
-                  );
-                }).toList(),
-              ),
+              TonePicker(toneNotifier: _toneNotifier),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
