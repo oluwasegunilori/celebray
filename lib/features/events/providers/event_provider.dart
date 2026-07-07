@@ -1,7 +1,6 @@
-import 'package:celebray/features/events/providers/event_provider.dart';
-import 'package:celebray/features/events/repositories/event_repository.dart';
-import 'package:celebray/features/reminders/domain/event_model.dart';
-import 'package:celebray/services/notification_service.dart';
+import 'package:celebray/features/events/data/event_repository.dart';
+import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/notifications/notification_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_provider.g.dart';

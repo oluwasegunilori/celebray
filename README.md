@@ -36,7 +36,7 @@ flutter run
 
 1. Create Android upload keystore and `android/key.properties` (see `key.properties.example`)
 2. Run `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`
-3. Host `docs/privacy_policy.md` and update URLs in `lib/constants/app_constants.dart`
+3. Host `docs/privacy_policy.md` and update URLs in `lib/core/constants/app_constants.dart`
 4. Add App Store / Play Store screenshots
 5. Run `flutter analyze` and `flutter test` before submitting
 

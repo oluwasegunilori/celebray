@@ -33,7 +33,7 @@ final class EventNotifierProvider
   EventNotifier create() => EventNotifier();
 }
 
-String _$eventNotifierHash() => r'd1792adaadcbc7a097b5f7aadafd5cafef266885';
+String _$eventNotifierHash() => r'fc870b65d75aab3e40723906a7972db3ff8c0fa0';
 
 abstract class _$EventNotifier extends $StreamNotifier<List<EventModel>> {
   Stream<List<EventModel>> build();

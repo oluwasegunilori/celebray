@@ -1,4 +1,4 @@
-import 'package:celebray/app_theme.dart';
+import 'package:celebray/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class ElegantBottomNav extends StatelessWidget {

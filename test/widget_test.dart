@@ -1,5 +1,5 @@
-import 'package:celebray/app_theme.dart';
-import 'package:celebray/features/onboarding/onboarding_manager.dart';
+import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/features/onboarding/presentation/onboarding_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
-        home: const OnboardingManager(),
+        home: const OnboardingGate(),
       ),
     );
 
