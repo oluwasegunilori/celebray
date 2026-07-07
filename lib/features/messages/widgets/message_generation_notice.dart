@@ -1,4 +1,6 @@
+import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/features/auth/data/ai_auth_service.dart';
 import 'package:celebray/features/auth/presentation/sign_in_screen.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +28,7 @@ class MessageGenerationNotice extends StatelessWidget {
       ),
     );
 
-    if (FirebaseAuth.instance.currentUser != null) {
+    if (FirebaseAuth.instance.currentUser != null && !AiAuthService.isGuest) {
       onSignedIn?.call();
     }
   }
@@ -37,9 +39,10 @@ class MessageGenerationNotice extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final isSignedIn = FirebaseAuth.instance.currentUser != null;
-    final showSignIn = !isSignedIn &&
-        (notice?.toLowerCase().contains('sign in') ?? false);
+    final isGuest = AiAuthService.isGuest;
+    final showSignIn = isGuest ||
+        ((notice?.toLowerCase().contains('sign in') ?? false) &&
+            !AiAuthService.hasFullAccount);
 
     return Container(
       width: double.infinity,
@@ -74,7 +77,11 @@ class MessageGenerationNotice extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => _openSignIn(context),
-              child: const Text('Sign in for AI messages'),
+              child: Text(
+                isGuest
+                    ? 'Sign in for ${AppConstants.aiDailyLimit}/day'
+                    : 'Sign in for AI messages',
+              ),
             ),
           ],
         ],

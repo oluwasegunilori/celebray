@@ -97,10 +97,16 @@ class AiMessageApi {
     }
 
     if (response.statusCode == 429) {
+      final limit = payload?['limit'] as int? ??
+          (AiAuthService.isGuest
+              ? AppConstants.aiAnonymousDailyLimit
+              : AppConstants.aiDailyLimit);
+      final upgradeHint = limit <= AppConstants.aiAnonymousDailyLimit
+          ? ' Sign in for ${AppConstants.aiDailyLimit}/day.'
+          : ' Try again tomorrow.';
       throw AiMessageException(
         code: 'rate_limited',
-        message:
-            'Daily AI limit reached (${AppConstants.aiDailyLimit}/day). Try again tomorrow.',
+        message: 'Daily AI limit reached ($limit/day).$upgradeHint',
       );
     }
 

@@ -1,9 +1,10 @@
+import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/auth/data/ai_auth_service.dart';
 import 'package:celebray/features/messages/ai_message_api.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_template_generator.dart';
 import 'package:celebray/core/utils/event_date_utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 /// Generates personalized celebration messages via AI with template fallback.
@@ -16,11 +17,12 @@ class MessageGeneratorService {
     EventModel event, {
     String tone = 'warm',
   }) async {
-    if (FirebaseAuth.instance.currentUser == null) {
+    final session = await AiAuthService.ensureSession();
+    if (session == null) {
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.generate(event, tone: tone),
         source: MessageGenerationSource.template,
-        notice: 'Sign in to unlock AI-powered messages.',
+        notice: 'AI is unavailable. Showing template messages instead.',
       );
     }
 
@@ -32,6 +34,7 @@ class MessageGeneratorService {
       return MessageGenerationResult(
         messages: messages,
         source: MessageGenerationSource.ai,
+        notice: session.isAnonymous ? AppConstants.guestAiNotice() : null,
       );
     } on AiMessageException catch (error) {
       return MessageGenerationResult(
@@ -54,7 +57,8 @@ class MessageGeneratorService {
     String instructions = '',
     String tone = 'warm',
   }) async {
-    if (FirebaseAuth.instance.currentUser == null) {
+    final session = await AiAuthService.ensureSession();
+    if (session == null) {
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.touchUp(
           event: event,
@@ -63,7 +67,7 @@ class MessageGeneratorService {
           tone: tone,
         ),
         source: MessageGenerationSource.template,
-        notice: 'Sign in to unlock AI touch-ups.',
+        notice: 'AI is unavailable. Showing template suggestions instead.',
       );
     }
 
@@ -76,6 +80,7 @@ class MessageGeneratorService {
       return MessageGenerationResult(
         messages: messages,
         source: MessageGenerationSource.ai,
+        notice: session.isAnonymous ? AppConstants.guestAiNotice() : null,
       );
     } on AiMessageException catch (error) {
       if (error.code == 'content_refused') {

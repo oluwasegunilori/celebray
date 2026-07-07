@@ -1,5 +1,7 @@
+import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/core/widgets/home_toolbar_actions.dart';
+import 'package:celebray/features/auth/data/ai_auth_service.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
@@ -167,8 +169,9 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                 onSignedIn: () {
                   if (!mounted) return;
                   setState(() {
-                    _generationNotice =
-                        'Signed in. Tap Generate Messages for AI-powered options.';
+                    _generationNotice = AiAuthService.hasFullAccount
+                        ? 'Signed in. Tap Generate Messages for AI-powered options.'
+                        : AppConstants.guestAiNotice();
                   });
                 },
               ),

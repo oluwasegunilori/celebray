@@ -108,7 +108,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         children: [
           userAsync.when(
-            data: (user) => user != null
+            data: (user) {
+              final firebaseUser = FirebaseAuth.instance.currentUser;
+              if (firebaseUser != null && firebaseUser.isAnonymous) {
+                return ListTile(
+                  leading: const Icon(Icons.person_outline, color: AppTheme.primary),
+                  title: const Text('Guest mode'),
+                  subtitle: Text(
+                    '${AppConstants.aiAnonymousDailyLimit} AI messages/day. '
+                    'Sign in for ${AppConstants.aiDailyLimit}/day and profile sync.',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (signInContext) => SignInScreen(
+                          onSignedIn: () {
+                            Navigator.pop(signInContext);
+                            ref.invalidate(currentUserProvider);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
+
+              return user != null
                 ? ListTile(
                     leading: CircleAvatar(
                       backgroundImage: user.photoUrl != null
@@ -124,9 +151,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 : ListTile(
                     leading: const Icon(Icons.person_outline),
                     title: const Text('Not signed in'),
-                    subtitle: const Text(
-                      'Sign in to unlock AI messages and sync your profile',
-                    ),
+                    subtitle: const Text('Sign in for more AI and profile sync'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       Navigator.push(
@@ -141,7 +166,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       );
                     },
-                  ),
+                  );
+            },
             loading: () => const LinearProgressIndicator(),
             error: (_, __) => const SizedBox.shrink(),
           ),

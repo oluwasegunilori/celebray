@@ -16,7 +16,8 @@ const { assessTouchUpInstructions } = require("./prompt/content_policy");
 admin.initializeApp();
 
 const openAiKey = defineSecret("OPENAI_API_KEY");
-const DAILY_LIMIT = 20;
+const ANONYMOUS_DAILY_LIMIT = 10;
+const AUTHENTICATED_DAILY_LIMIT = 20;
 const MODEL = "gpt-4o-mini";
 
 function setCors(res) {
@@ -34,10 +35,20 @@ async function verifyAuth(req) {
   }
 
   const token = authHeader.slice(7);
-  return admin.auth().verifyIdToken(token);
+  const decoded = await admin.auth().verifyIdToken(token);
+  const isAnonymous = decoded.firebase?.sign_in_provider === "anonymous";
+
+  return {
+    uid: decoded.uid,
+    isAnonymous,
+  };
 }
 
-async function consumeRateLimit(uid) {
+function dailyLimitForUser(isAnonymous) {
+  return isAnonymous ? ANONYMOUS_DAILY_LIMIT : AUTHENTICATED_DAILY_LIMIT;
+}
+
+async function consumeRateLimit(uid, limit) {
   const db = admin.firestore();
   const today = new Date().toISOString().slice(0, 10);
   const ref = db.collection("aiUsage").doc(uid).collection("days").doc(today);
@@ -45,9 +56,10 @@ async function consumeRateLimit(uid) {
   await db.runTransaction(async (tx) => {
     const doc = await tx.get(ref);
     const count = doc.exists ? doc.data().count || 0 : 0;
-    if (count >= DAILY_LIMIT) {
+    if (count >= limit) {
       const error = new Error("Daily AI limit reached.");
       error.code = "rate_limited";
+      error.limit = limit;
       throw error;
     }
     tx.set(
@@ -190,7 +202,7 @@ function handleError(res, error) {
     res.status(429).json({
       error: code,
       message: error.message,
-      limit: DAILY_LIMIT,
+      limit: error.limit ?? AUTHENTICATED_DAILY_LIMIT,
     });
     return;
   }
@@ -228,7 +240,8 @@ exports.generateMessages = onRequest(functionOptions, async (req, res) => {
 
   try {
     const user = await verifyAuth(req);
-    await consumeRateLimit(user.uid);
+    const limit = dailyLimitForUser(user.isAnonymous);
+    await consumeRateLimit(user.uid, limit);
 
     const event = eventPayload(req.body || {});
     if (!event.name.trim() || !event.type.trim()) {
@@ -239,7 +252,12 @@ exports.generateMessages = onRequest(functionOptions, async (req, res) => {
     const openai = new OpenAI({ apiKey: openAiKey.value() });
     const messages = await callOpenAi(openai, buildGeneratePrompt(event));
 
-    res.json({ messages, source: "ai", remainingHint: DAILY_LIMIT });
+    res.json({
+      messages,
+      source: "ai",
+      limit,
+      isAnonymous: user.isAnonymous,
+    });
   } catch (error) {
     handleError(res, error);
   }
@@ -278,7 +296,7 @@ exports.touchUpMessage = onRequest(functionOptions, async (req, res) => {
       return;
     }
 
-    await consumeRateLimit(user.uid);
+    await consumeRateLimit(user.uid, dailyLimitForUser(user.isAnonymous));
 
     const openai = new OpenAI({ apiKey: openAiKey.value() });
     const messages = await callOpenAi(
@@ -286,7 +304,13 @@ exports.touchUpMessage = onRequest(functionOptions, async (req, res) => {
       buildTouchUpPrompt(event, currentMessage, instructions),
     );
 
-    res.json({ messages, source: "ai", remainingHint: DAILY_LIMIT });
+    const limit = dailyLimitForUser(user.isAnonymous);
+    res.json({
+      messages,
+      source: "ai",
+      limit,
+      isAnonymous: user.isAnonymous,
+    });
   } catch (error) {
     handleError(res, error);
   }
