@@ -1,6 +1,8 @@
 import 'package:celebray/app.dart';
 import 'package:celebray/core/database/app_database.dart';
 import 'package:celebray/core/database/app_database_provider.dart';
+import 'package:celebray/features/auth/data/google_sign_in_bootstrap.dart';
+import 'package:celebray/features/notifications/notification_navigation_handler.dart';
 import 'package:celebray/features/notifications/notification_service.dart';
 import 'package:celebray/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,6 +16,8 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  await GoogleSignInBootstrap.initialize();
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
@@ -24,10 +28,15 @@ Future<void> main() async {
     return true;
   };
 
-  await NotificationService.init();
+  await NotificationService.init(
+    onNotificationResponse: NotificationNavigationHandler.handleNotificationResponse,
+  );
   await NotificationService.requestPermissions();
 
   final db = await AppDatabase.open();
+  NotificationNavigationHandler.bindDatabase(db);
+  await NotificationNavigationHandler.captureColdStartLaunch();
+
   final events = await db.watchAllEvents().first;
   await NotificationService.rescheduleAll(events);
 

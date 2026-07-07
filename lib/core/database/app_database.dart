@@ -84,6 +84,17 @@ class AppDatabase {
     await _notifyListeners();
   }
 
+  Future<EventModel?> getEventById(String id) async {
+    final rows = await _db.query(
+      _tableName,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _rowToEntity(rows.first).toDomain();
+  }
+
   EventEntity _rowToEntity(Map<String, Object?> row) {
     final memoriesRaw = row['memories'] as String? ?? '[]';
     final memories = List<String>.from(json.decode(memoriesRaw) as List);

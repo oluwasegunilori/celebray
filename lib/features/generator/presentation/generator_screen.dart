@@ -163,6 +163,13 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
               MessageGenerationNotice(
                 notice: _generationNotice,
                 source: _generationSource,
+                onSignedIn: () {
+                  if (!mounted) return;
+                  setState(() {
+                    _generationNotice =
+                        'Signed in. Tap Generate Messages for AI-powered options.';
+                  });
+                },
               ),
               const SizedBox(height: 4),
               const Text(

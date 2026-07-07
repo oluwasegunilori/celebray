@@ -1,6 +1,7 @@
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/features/calendar_import/widgets/calendar_import_sheet.dart';
+import 'package:celebray/features/auth/presentation/sign_in_screen.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/auth/data/auth_service.dart';
 import 'package:celebray/features/notifications/notification_service.dart';
@@ -21,7 +22,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
-  int _reminderDays = AppConstants.defaultReminderDaysBefore;
   String _appVersion = '';
 
   @override
@@ -32,12 +32,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final enabled = await NotificationService.areNotificationsEnabled();
-    final days = await NotificationService.getReminderDaysBefore();
     final info = await PackageInfo.fromPlatform();
     if (mounted) {
       setState(() {
         _notificationsEnabled = enabled;
-        _reminderDays = days;
         _appVersion = '${info.version}+${info.buildNumber}';
       });
     }
@@ -123,10 +121,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: Text(user.name ?? 'Signed in'),
                     subtitle: Text(user.email ?? ''),
                   )
-                : const ListTile(
-                    leading: Icon(Icons.person_outline),
-                    title: Text('Not signed in'),
-                    subtitle: Text('Sign in from onboarding to sync your profile'),
+                : ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: const Text('Not signed in'),
+                    subtitle: const Text(
+                      'Sign in to unlock AI messages and sync your profile',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (signInContext) => SignInScreen(
+                            onSignedIn: () {
+                              Navigator.pop(signInContext);
+                              ref.invalidate(currentUserProvider);
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   ),
             loading: () => const LinearProgressIndicator(),
             error: (_, __) => const SizedBox.shrink(),
@@ -134,8 +148,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const Divider(),
           SwitchListTile(
             secondary: const Icon(Icons.notifications, color: AppTheme.primary),
-            title: const Text('Notifications'),
-            subtitle: const Text('Get reminded before celebrations'),
+            title: const Text('Celebration alerts'),
+            subtitle: const Text(
+              'Midnight alert on the day with quick access to share',
+            ),
             value: _notificationsEnabled,
             activeThumbColor: AppTheme.primary,
             onChanged: (value) async {
@@ -146,25 +162,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               setState(() => _notificationsEnabled = value);
               if (value) await _rescheduleReminders();
             },
-          ),
-          ListTile(
-            leading: const Icon(Icons.schedule, color: AppTheme.primary),
-            title: const Text('Remind me before'),
-            subtitle: Text('$_reminderDays days'),
-            trailing: DropdownButton<int>(
-              value: _reminderDays,
-              items: const [1, 3, 7, 14, 30]
-                  .map(
-                    (d) => DropdownMenuItem(value: d, child: Text('$d days')),
-                  )
-                  .toList(),
-              onChanged: (days) async {
-                if (days == null) return;
-                await NotificationService.setReminderDaysBefore(days);
-                setState(() => _reminderDays = days);
-                await _rescheduleReminders();
-              },
-            ),
           ),
           const Divider(),
           ListTile(

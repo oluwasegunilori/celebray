@@ -11,29 +11,46 @@ import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   NotificationService._();
 
+  static const shareActionId = 'share';
+
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   static bool _initialized = false;
 
-  static Future<void> init() async {
+  static Future<void> init({
+    required void Function(NotificationResponse response)
+        onNotificationResponse,
+  }) async {
     if (_initialized) return;
 
     tz.initializeTimeZones();
 
+    final shareAction = DarwinNotificationAction.plain(
+      shareActionId,
+      'Share',
+      options: {DarwinNotificationActionOption.foreground},
+    );
+    final celebrationCategory = DarwinNotificationCategory(
+      'celebration_day',
+      actions: [shareAction],
+    );
+
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
+      notificationCategories: [celebrationCategory],
     );
 
     await _plugin.initialize(
-      const InitializationSettings(
+      InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
+      onDidReceiveNotificationResponse: onNotificationResponse,
     );
 
     if (Platform.isAndroid) {
@@ -53,6 +70,11 @@ class NotificationService {
     _initialized = true;
   }
 
+  static Future<NotificationAppLaunchDetails?>
+      getNotificationAppLaunchDetails() {
+    return _plugin.getNotificationAppLaunchDetails();
+  }
+
   static Future<bool> areNotificationsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('notifications_enabled') ?? true;
@@ -64,17 +86,6 @@ class NotificationService {
     if (!enabled) {
       await _plugin.cancelAll();
     }
-  }
-
-  static Future<int> getReminderDaysBefore() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('reminder_days_before') ??
-        AppConstants.defaultReminderDaysBefore;
-  }
-
-  static Future<void> setReminderDaysBefore(int days) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('reminder_days_before', days);
   }
 
   static Future<bool> requestPermissions() async {
@@ -98,8 +109,8 @@ class NotificationService {
     return true;
   }
 
-  static int _notificationId(String eventId, String suffix) {
-    return '$eventId-$suffix'.hashCode.abs() % 2147483647;
+  static int _notificationId(String eventId) {
+    return '$eventId-celebration'.hashCode.abs() % 2147483647;
   }
 
   static Future<void> scheduleEventReminders(EventModel event) async {
@@ -107,51 +118,49 @@ class NotificationService {
 
     await cancelEventReminders(event.id);
 
-    final daysBefore = await getReminderDaysBefore();
     final next = EventDateUtils.nextOccurrence(event.date);
+    final when = DateTime(next.year, next.month, next.day);
     final now = DateTime.now();
 
-    final schedules = <({DateTime when, String title, String body, String suffix})>[
-      (
-        when: next.subtract(Duration(days: daysBefore)),
-        title: 'Coming up in $daysBefore days',
-        body: "${event.name}'s ${event.type} is on ${_formatDate(next)}.",
-        suffix: 'advance',
-      ),
-      (
-        when: DateTime(next.year, next.month, next.day, 9),
-        title: "Today's the day! 🎉",
-        body: "It's ${event.name}'s ${event.type}! Don't forget to celebrate.",
-        suffix: 'dayof',
-      ),
-    ];
+    if (!when.isAfter(now)) return;
 
-    for (final schedule in schedules) {
-      if (!schedule.when.isAfter(now)) continue;
+    final label = event.name.isNotEmpty ? event.name : event.type;
+    final title = "🎉 It's $label's ${event.type} today!";
+    final body = event.generatedMessage?.trim().isNotEmpty ?? false
+        ? 'Tap to celebrate and share your message.'
+        : 'Tap to open details and share your celebration.';
 
-      await _plugin.zonedSchedule(
-        _notificationId(event.id, schedule.suffix),
-        schedule.title,
-        schedule.body,
-        tz.TZDateTime.from(schedule.when, tz.local),
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            AppConstants.notificationChannelId,
-            AppConstants.notificationChannelName,
-            channelDescription: AppConstants.notificationChannelDescription,
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: const DarwinNotificationDetails(),
+    await _plugin.zonedSchedule(
+      _notificationId(event.id),
+      title,
+      body,
+      tz.TZDateTime.from(when, tz.local),
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          AppConstants.notificationChannelId,
+          AppConstants.notificationChannelName,
+          channelDescription: AppConstants.notificationChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          actions: const [
+            AndroidNotificationAction(
+              shareActionId,
+              'Share',
+              showsUserInterface: true,
+            ),
+          ],
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      );
-    }
+        iOS: const DarwinNotificationDetails(
+          categoryIdentifier: 'celebration_day',
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: event.id,
+    );
   }
 
   static Future<void> cancelEventReminders(String eventId) async {
-    await _plugin.cancel(_notificationId(eventId, 'advance'));
-    await _plugin.cancel(_notificationId(eventId, 'dayof'));
+    await _plugin.cancel(_notificationId(eventId));
   }
 
   static Future<void> rescheduleAll(List<EventModel> events) async {
@@ -160,13 +169,5 @@ class NotificationService {
     for (final event in events) {
       await scheduleEventReminders(event);
     }
-  }
-
-  static String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
   }
 }

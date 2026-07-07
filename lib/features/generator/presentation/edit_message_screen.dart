@@ -188,6 +188,13 @@ class _EditMessageScreenState extends ConsumerState<EditMessageScreen> {
                 MessageGenerationNotice(
                   notice: _touchUpNotice,
                   source: _touchUpSource,
+                  onSignedIn: () {
+                    if (!mounted) return;
+                    setState(() {
+                      _touchUpNotice =
+                          'Signed in. Tap Touch it up for AI-powered suggestions.';
+                    });
+                  },
                 ),
                 SizedBox(
                   width: double.infinity,

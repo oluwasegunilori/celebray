@@ -1,4 +1,5 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/features/auth/presentation/sign_in_screen.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +7,29 @@ import 'package:flutter/material.dart';
 class MessageGenerationNotice extends StatelessWidget {
   final String? notice;
   final MessageGenerationSource? source;
+  final VoidCallback? onSignedIn;
 
   const MessageGenerationNotice({
     super.key,
     this.notice,
     this.source,
+    this.onSignedIn,
   });
+
+  Future<void> _openSignIn(BuildContext context) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (signInContext) => SignInScreen(
+          onSignedIn: () => Navigator.pop(signInContext),
+        ),
+      ),
+    );
+
+    if (FirebaseAuth.instance.currentUser != null) {
+      onSignedIn?.call();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +73,7 @@ class MessageGenerationNotice extends StatelessWidget {
           if (showSignIn) ...[
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/sign-in'),
+              onPressed: () => _openSignIn(context),
               child: const Text('Sign in for AI messages'),
             ),
           ],

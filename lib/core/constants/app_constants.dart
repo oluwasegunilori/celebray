@@ -7,9 +7,7 @@ class AppConstants {
   static const String notificationChannelId = 'celebray_reminders';
   static const String notificationChannelName = 'Celebration Reminders';
   static const String notificationChannelDescription =
-      'Reminders for upcoming birthdays and celebrations';
-
-  static const int defaultReminderDaysBefore = 7;
+      'Alerts on celebration days so you can share your message';
 
   static const String firebaseProjectId = 'celebray-fa7ae';
   static const String aiFunctionsRegion = 'us-central1';

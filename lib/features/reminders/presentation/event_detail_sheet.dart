@@ -8,20 +8,23 @@ import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EventDetailSheet extends ConsumerWidget {
+class EventDetailSheet extends ConsumerStatefulWidget {
   final EventModel event;
   final void Function(EventAction) onAction;
+  final bool openShareOnOpen;
 
   const EventDetailSheet({
     super.key,
     required this.event,
     required this.onAction,
+    this.openShareOnOpen = false,
   });
 
   static void show(
     BuildContext context, {
     required EventModel event,
     required void Function(EventAction) onAction,
+    bool openShareOnOpen = false,
   }) {
     showModalBottomSheet(
       context: context,
@@ -29,12 +32,35 @@ class EventDetailSheet extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => EventDetailSheet(event: event, onAction: onAction),
+      builder: (_) => EventDetailSheet(
+        event: event,
+        onAction: onAction,
+        openShareOnOpen: openShareOnOpen,
+      ),
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EventDetailSheet> createState() => _EventDetailSheetState();
+}
+
+class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.openShareOnOpen) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ShareEventSheet.show(context, event: widget.event);
+    });
+  }
+
+  EventModel get event => widget.event;
+  void Function(EventAction) get onAction => widget.onAction;
+
+  @override
+  Widget build(BuildContext context) {
     final next = EventDateUtils.nextOccurrence(event.date);
     final actualDate = dateFormatterDay.format(next);
     final daysUntil = EventDateUtils.daysUntilNext(event.date);
