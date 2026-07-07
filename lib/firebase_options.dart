@@ -54,16 +54,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '68778743183',
     projectId: 'celebray-fa7ae',
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
+    iosClientId: '68778743183-mac6b1mcj9rt59q9evcr7o14p53rj5eq.apps.googleusercontent.com',
     iosBundleId: 'com.shegz.celebray',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCzBd7lqXuBOW_oeIAbshwjpDHYm3eNhFM',
-    appId: '1:68778743183:ios:e1847c1af4f3f0a8b7fa',
+    appId: '1:68778743183:ios:4491a3325947142bb8a7fa',
     messagingSenderId: '68778743183',
     projectId: 'celebray-fa7ae',
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
-    iosBundleId: 'com.shegz.celebray',
+    iosClientId: '68778743183-2g75emk8blahqb9dacjmbt7njshrvg2b.apps.googleusercontent.com',
+    iosBundleId: 'com.example.celebray',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
@@ -75,4 +77,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
     measurementId: 'G-23Y4WT5BM7',
   );
+
 }
