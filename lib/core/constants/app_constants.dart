@@ -1,8 +1,9 @@
 class AppConstants {
-  static const String privacyPolicyUrl =
-      'https://github.com/shegz/celebray/blob/main/docs/privacy_policy.md';
-  static const String termsUrl =
-      'https://github.com/shegz/celebray/blob/main/docs/terms_of_service.md';
+  static const String siteBaseUrl = 'https://celebray.web.app';
+
+  static const String privacyPolicyUrl = '$siteBaseUrl/privacy';
+  static const String termsUrl = '$siteBaseUrl/terms';
+  static const String supportUrl = '$siteBaseUrl/support';
 
   static const String notificationChannelId = 'celebray_reminders';
   static const String notificationChannelName = 'Celebration Reminders';

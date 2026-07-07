@@ -103,6 +103,14 @@ class AiMessageApi {
       );
     }
 
+    if (response.statusCode == 422) {
+      throw AiMessageException(
+        code: payload?['error'] as String? ?? 'content_refused',
+        message: payload?['message'] as String? ??
+            "This request can't be processed. Celebray only helps write celebration messages.",
+      );
+    }
+
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw AiMessageException(
         code: 'unavailable',

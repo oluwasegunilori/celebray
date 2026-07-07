@@ -2,6 +2,14 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const OpenAI = require("openai");
+const {
+  buildSystemPrompt,
+  eventTypeSkill,
+  relationshipSkill,
+  closenessSkill,
+  toneLine,
+} = require("./prompt/load_skills");
+const { assessTouchUpInstructions } = require("./prompt/content_policy");
 
 admin.initializeApp();
 
@@ -67,24 +75,22 @@ function buildGeneratePrompt(event) {
   const memoryText =
     event.memories.length > 0
       ? `Shared memories: ${event.memories.join("; ")}.`
-      : "No shared memories provided.";
+      : "No shared memories provided — do not invent any.";
 
   return `
-Write exactly 3 distinct ${event.tone} celebration messages for this person.
+Write exactly 3 distinct messages for this celebration.
 
 Person: ${event.name}
 Event type: ${event.type}
 Relationship: ${event.relationship}
+Sex (for pronouns if needed): ${event.sex}
 Closeness (1-10): ${event.closeness}
 ${memoryText}
 
-Rules:
-- Each message under 280 characters.
-- Sound personal and human, not generic.
-- Match the ${event.tone} tone (${toneDescription(event.tone)}).
-- Use emojis sparingly (0-2 per message).
-- Do not mention Celebray or being an AI.
-- Return JSON only: {"messages":["...","...","..."]}
+${eventTypeSkill(event.type)}
+${relationshipSkill(event.relationship)}
+${closenessSkill(event.closeness)}
+${toneLine(event.tone)}
 `.trim();
 }
 
@@ -92,7 +98,7 @@ function buildTouchUpPrompt(event, currentMessage, instructions) {
   const memoryText =
     event.memories.length > 0
       ? `Shared memories: ${event.memories.join("; ")}.`
-      : "No shared memories provided.";
+      : "No shared memories provided — do not invent any.";
 
   return `
 Revise this celebration message based on the user's notes.
@@ -102,6 +108,10 @@ Event type: ${event.type}
 Relationship: ${event.relationship}
 ${memoryText}
 
+${eventTypeSkill(event.type)}
+${relationshipSkill(event.relationship)}
+${closenessSkill(event.closeness)}
+
 Current message:
 "${currentMessage}"
 
@@ -109,23 +119,7 @@ User notes:
 "${instructions || "Polish the message while keeping the same meaning."}"
 
 Write exactly 3 revised versions.
-Rules:
-- Each message under 280 characters.
-- Follow the user's notes when possible.
-- Do not mention Celebray or being an AI.
-- Return JSON only: {"messages":["...","...","..."]}
 `.trim();
-}
-
-function toneDescription(tone) {
-  switch (tone) {
-    case "funny":
-      return "light, playful, warm humor";
-    case "formal":
-      return "polished, respectful, professional";
-    default:
-      return "heartfelt, warm, sincere";
-  }
 }
 
 async function callOpenAi(openai, prompt) {
@@ -136,8 +130,7 @@ async function callOpenAi(openai, prompt) {
     messages: [
       {
         role: "system",
-        content:
-          "You write short, shareable celebration messages for birthdays and milestones. Always respond with valid JSON.",
+        content: buildSystemPrompt(),
       },
       { role: "user", content: prompt },
     ],
@@ -156,6 +149,14 @@ async function callOpenAi(openai, prompt) {
   } catch (_) {
     const error = new Error("Invalid AI response.");
     error.code = "ai_error";
+    throw error;
+  }
+
+  if (parsed.refused === true) {
+    const error = new Error(
+      "This request can't be processed. Celebray only helps write celebration messages.",
+    );
+    error.code = "content_refused";
     throw error;
   }
 
@@ -184,6 +185,10 @@ function handleError(res, error) {
       message: error.message,
       limit: DAILY_LIMIT,
     });
+    return;
+  }
+  if (code === "content_refused") {
+    res.status(422).json({ error: code, message: error.message });
     return;
   }
   if (code === "ai_error") {
@@ -246,7 +251,6 @@ exports.touchUpMessage = onRequest(functionOptions, async (req, res) => {
 
   try {
     const user = await verifyAuth(req);
-    await consumeRateLimit(user.uid);
 
     const body = req.body || {};
     const event = eventPayload(body);
@@ -257,6 +261,17 @@ exports.touchUpMessage = onRequest(functionOptions, async (req, res) => {
       res.status(400).json({ error: "invalid_request", message: "Missing current message." });
       return;
     }
+
+    const policy = assessTouchUpInstructions(instructions);
+    if (!policy.allowed) {
+      res.status(422).json({
+        error: "content_refused",
+        message: policy.message,
+      });
+      return;
+    }
+
+    await consumeRateLimit(user.uid);
 
     const openai = new OpenAI({ apiKey: openAiKey.value() });
     const messages = await callOpenAi(

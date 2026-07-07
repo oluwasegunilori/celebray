@@ -65,10 +65,15 @@ class _EditMessageScreenState extends ConsumerState<EditMessageScreen> {
     if (!mounted) return;
 
     setState(() {
+      _isTouchingUp = false;
+      if (result.refused) {
+        _touchUpNotice = result.notice;
+        _touchUpSource = result.source;
+        return;
+      }
       _suggestions = result.messages;
       _selectedIndex = 0;
       _showResults = true;
-      _isTouchingUp = false;
       _touchUpNotice = result.notice;
       _touchUpSource = result.source;
     });

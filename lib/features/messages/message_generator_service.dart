@@ -78,6 +78,14 @@ class MessageGeneratorService {
         source: MessageGenerationSource.ai,
       );
     } on AiMessageException catch (error) {
+      if (error.code == 'content_refused') {
+        return MessageGenerationResult(
+          messages: const [],
+          source: MessageGenerationSource.template,
+          notice: error.message,
+          refused: true,
+        );
+      }
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.touchUp(
           event: event,

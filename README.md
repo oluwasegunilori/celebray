@@ -36,11 +36,26 @@ flutter run
 
 1. Create Android upload keystore and `android/key.properties` (see `key.properties.example`)
 2. Run `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`
-3. Host `docs/privacy_policy.md` and update URLs in `lib/core/constants/app_constants.dart`
+3. Deploy legal pages: `firebase deploy --only hosting` (see Store URLs below)
 4. Add App Store / Play Store screenshots
 5. Run `flutter analyze` and `flutter test` before submitting
 
+## Store URLs
+
+Use these when submitting to the App Store and Google Play:
+
+| Field | URL |
+| --- | --- |
+| Privacy Policy | https://celebray.web.app/privacy |
+| Terms of Service | https://celebray.web.app/terms |
+| Support URL | https://celebray.web.app/support |
+| Marketing / Website | https://celebray.web.app |
+
+Deploy with `firebase deploy --only hosting`.
+
 ## Legal
+
+Source documents (also published at the URLs above):
 
 - [Privacy Policy](docs/privacy_policy.md)
 - [Terms of Service](docs/terms_of_service.md)
