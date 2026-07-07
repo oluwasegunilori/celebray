@@ -38,12 +38,11 @@ class AuthService {
         user = credential.user;
         AiDebugLog.log(
           'ensureAiSession: signInAnonymously done '
-          'uid=${user?.uid ?? "null"} isAnonymous=${user?.isAnonymous}',
+          'isAnonymous=${user?.isAnonymous}',
         );
       } else {
         AiDebugLog.log(
-          'ensureAiSession: reusing currentUser '
-          'uid=${user.uid} isAnonymous=${user.isAnonymous}',
+          'ensureAiSession: reusing currentUser isAnonymous=${user.isAnonymous}',
         );
       }
       if (user == null) {
@@ -54,9 +53,14 @@ class AuthService {
       }
 
       final token = await user.getIdToken(true);
+      if (token == null || token.isEmpty) {
+        AiDebugLog.error('ensureAiSession: empty ID token after refresh');
+        return const AiAuthSessionResult.failure(
+          'Could not start a guest AI session. Try again.',
+        );
+      }
       AiDebugLog.log(
-        'ensureAiSession: token refreshed '
-        'len=${token?.length ?? 0} uid=${user.uid} isAnonymous=${user.isAnonymous}',
+        'ensureAiSession: token refreshed isAnonymous=${user.isAnonymous}',
       );
 
       AiDebugLog.log('ensureAiSession: success');
@@ -69,12 +73,11 @@ class AuthService {
     } on FirebaseAuthException catch (error, stack) {
       AiDebugLog.error(
         'ensureAiSession FirebaseAuthException code=${error.code}',
-        error.message,
         stack,
       );
       return AiAuthSessionResult.failure(_guestSessionErrorMessage(error));
     } catch (error, stack) {
-      AiDebugLog.error('ensureAiSession unexpected failure', error, stack);
+      AiDebugLog.error('ensureAiSession unexpected failure', stack);
       return const AiAuthSessionResult.failure(
         'Guest AI is unavailable right now. Showing templates instead.',
       );

@@ -24,7 +24,7 @@
     </nav>
 
     <main>
-      <p class="meta"><strong>Last updated:</strong> July 6, 2026</p>
+      <p class="meta"><strong>Last updated:</strong> July 7, 2026</p>
 
       <div class="card">
         <p>
@@ -40,12 +40,25 @@
           <li>
             <strong>Account information:</strong> If you sign in with Google or
             Apple, we store your name, email, and profile photo locally on your
-            device using secure storage.
+            device using secure storage. Guest AI uses Firebase Anonymous
+            Authentication (a random user ID with no personal details).
           </li>
           <li>
             <strong>Event data:</strong> Celebrations you add (names, dates,
-            relationships, memories) are stored locally on your device in a SQLite
-            database.
+            relationships, memories, photos) are stored locally on your device in
+            a SQLite database.
+          </li>
+          <li>
+            <strong>AI request data:</strong> When you use AI message generation
+            or touch-up, the app sends relevant celebration details (name, event
+            type, relationship, memories, tone, and faith context if provided)
+            to our servers for processing. We do not permanently store the
+            content of these requests.
+          </li>
+          <li>
+            <strong>AI usage counters:</strong> We store a daily request count
+            per Firebase user ID in Firestore to enforce rate limits (10/day for
+            guests, 20/day for signed-in users).
           </li>
           <li>
             <strong>Crash reports:</strong> Anonymous crash data may be collected
@@ -57,25 +70,41 @@
       <div class="card">
         <h2>How We Use Information</h2>
         <ul>
-          <li>To provide reminder notifications for your celebrations</li>
-          <li>To personalize message generation within the app</li>
+          <li>
+            To send a <strong>midnight notification on the celebration day</strong>
+            with quick access to share your message
+          </li>
+          <li>To generate and refine celebration messages when you use AI features</li>
           <li>To authenticate your account when you choose to sign in</li>
+          <li>To enforce fair-use limits on AI features</li>
         </ul>
       </div>
 
       <div class="card">
         <h2>Data Storage</h2>
         <p>
-          All event data is stored locally on your device. We do not sync your
-          celebrations to a cloud server in the current version.
+          All event data is stored <strong>locally on your device</strong>. We do
+          not sync your celebrations to a cloud database in the current version.
+        </p>
+        <p>
+          AI message requests are processed transiently on Google Cloud Functions
+          and forwarded to OpenAI. They are not saved as a permanent message
+          history on our servers.
         </p>
       </div>
 
       <div class="card">
         <h2>Third-Party Services</h2>
         <ul>
-          <li><strong>Firebase Authentication</strong> — sign-in with Google and Apple</li>
+          <li><strong>Firebase Authentication</strong> — sign-in with Google and Apple; anonymous auth for guest AI</li>
+          <li><strong>Firebase Cloud Functions</strong> — secure backend for AI message generation</li>
+          <li><strong>Firebase Firestore</strong> — daily AI usage counters only (not your events)</li>
           <li><strong>Firebase Crashlytics</strong> — crash reporting</li>
+          <li>
+            <strong>OpenAI</strong> — processes celebration details you submit to
+            generate message text.
+            <a href="https://openai.com/policies/privacy-policy">OpenAI privacy policy</a>
+          </li>
           <li><strong>Google Sign-In / Sign in with Apple</strong> — authentication</li>
         </ul>
       </div>
@@ -85,7 +114,7 @@
         <p>
           You can delete your account and local profile data from Settings. You
           can delete individual events from the Reminders screen. Uninstalling
-          the app removes all locally stored data.
+          the app removes all locally stored celebration data.
         </p>
       </div>
 

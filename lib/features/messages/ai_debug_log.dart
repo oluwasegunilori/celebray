@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-/// Debug-only logs for the AI guest/auth/API flow. Filter console with `CelebrayAI`.
+/// Debug-only, privacy-safe logs for the AI flow. Filter console with `CelebrayAI`.
+/// Does not log uids, tokens, names, message text, or response bodies.
 abstract final class AiDebugLog {
   static const _tag = 'CelebrayAI';
 
@@ -12,16 +13,11 @@ abstract final class AiDebugLog {
 
   static void error(
     String message, [
-    Object? error,
     StackTrace? stackTrace,
   ]) {
     if (!kDebugMode) return;
 
-    final buffer = StringBuffer('[$_tag] ERROR: $message');
-    if (error != null) {
-      buffer.write(' | $error');
-    }
-    debugPrint(buffer.toString());
+    debugPrint('[$_tag] ERROR: $message');
     if (stackTrace != null) {
       debugPrint(stackTrace.toString());
     }

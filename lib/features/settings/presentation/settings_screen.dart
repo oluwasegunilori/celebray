@@ -114,10 +114,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 return ListTile(
                   leading: const Icon(Icons.person_outline, color: AppTheme.primary),
                   title: const Text('Guest mode'),
-                  subtitle: Text(
-                    '${AppConstants.aiAnonymousDailyLimit} AI messages/day. '
-                    'Sign in for ${AppConstants.aiDailyLimit}/day and profile sync.',
-                  ),
+                  subtitle: Text(AppConstants.guestAiNotice()),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.push(
@@ -151,7 +148,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 : ListTile(
                     leading: const Icon(Icons.person_outline),
                     title: const Text('Not signed in'),
-                    subtitle: const Text('Sign in for more AI and profile sync'),
+                    subtitle: Text(
+                      'Sign in for ${AppConstants.aiDailyLimit} AI messages per day.',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       Navigator.push(

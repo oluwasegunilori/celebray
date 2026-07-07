@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardPage(
       image: Icons.notifications_active,
       title: "Timely Reminders ⏰",
-      desc: "Get notified ahead of special days.",
+      desc: "Get a midnight alert on celebration day so you can share your message.",
     ),
   ];
 

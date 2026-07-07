@@ -38,12 +38,6 @@ async function verifyAuth(req) {
   const decoded = await admin.auth().verifyIdToken(token);
   const isAnonymous = decoded.firebase?.sign_in_provider === "anonymous";
 
-  console.log("[CelebrayAI] verifyAuth", {
-    uid: decoded.uid,
-    signInProvider: decoded.firebase?.sign_in_provider,
-    isAnonymous,
-  });
-
   return {
     uid: decoded.uid,
     isAnonymous,
@@ -248,11 +242,6 @@ exports.generateMessages = onRequest(functionOptions, async (req, res) => {
   try {
     const user = await verifyAuth(req);
     const limit = dailyLimitForUser(user.isAnonymous);
-    console.log("[CelebrayAI] generateMessages", {
-      uid: user.uid,
-      isAnonymous: user.isAnonymous,
-      limit,
-    });
     await consumeRateLimit(user.uid, limit);
 
     const event = eventPayload(req.body || {});
@@ -288,10 +277,6 @@ exports.touchUpMessage = onRequest(functionOptions, async (req, res) => {
 
   try {
     const user = await verifyAuth(req);
-    console.log("[CelebrayAI] touchUpMessage", {
-      uid: user.uid,
-      isAnonymous: user.isAnonymous,
-    });
 
     const body = req.body || {};
     const event = eventPayload(body);

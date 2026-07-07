@@ -18,9 +18,7 @@ class MessageGeneratorService {
     EventModel event, {
     String tone = 'warm',
   }) async {
-    AiDebugLog.log(
-      'generateMessages: start event="${event.name}" tone=$tone',
-    );
+    AiDebugLog.log('generateMessages: start tone=$tone');
 
     final sessionResult = await AiAuthService.ensureSession();
     if (!sessionResult.isSuccess) {
@@ -37,8 +35,7 @@ class MessageGeneratorService {
 
     final session = sessionResult.session!;
     AiDebugLog.log(
-      'generateMessages: session ok uid=${session.user.uid} '
-      'isAnonymous=${session.isAnonymous}',
+      'generateMessages: session ok isAnonymous=${session.isAnonymous}',
     );
 
     try {
@@ -58,7 +55,6 @@ class MessageGeneratorService {
     } on AiMessageException catch (error, stack) {
       AiDebugLog.error(
         'generateMessages: AiMessageException code=${error.code}',
-        error.message,
         stack,
       );
       return MessageGenerationResult(
@@ -67,7 +63,7 @@ class MessageGeneratorService {
         notice: error.message,
       );
     } catch (error, stack) {
-      AiDebugLog.error('generateMessages: unexpected failure', error, stack);
+      AiDebugLog.error('generateMessages: unexpected failure', stack);
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.generate(event, tone: tone),
         source: MessageGenerationSource.template,
@@ -82,10 +78,7 @@ class MessageGeneratorService {
     String instructions = '',
     String tone = 'warm',
   }) async {
-    AiDebugLog.log(
-      'touchUpMessage: start event="${event.name}" '
-      'messageLen=${currentMessage.length} instructionsLen=${instructions.length}',
-    );
+    AiDebugLog.log('touchUpMessage: start');
 
     final sessionResult = await AiAuthService.ensureSession();
     if (!sessionResult.isSuccess) {
@@ -107,8 +100,7 @@ class MessageGeneratorService {
 
     final session = sessionResult.session!;
     AiDebugLog.log(
-      'touchUpMessage: session ok uid=${session.user.uid} '
-      'isAnonymous=${session.isAnonymous}',
+      'touchUpMessage: session ok isAnonymous=${session.isAnonymous}',
     );
 
     try {
@@ -129,7 +121,6 @@ class MessageGeneratorService {
     } on AiMessageException catch (error, stack) {
       AiDebugLog.error(
         'touchUpMessage: AiMessageException code=${error.code}',
-        error.message,
         stack,
       );
       if (error.code == 'content_refused') {
@@ -151,7 +142,7 @@ class MessageGeneratorService {
         notice: error.message,
       );
     } catch (error, stack) {
-      AiDebugLog.error('touchUpMessage: unexpected failure', error, stack);
+      AiDebugLog.error('touchUpMessage: unexpected failure', stack);
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.touchUp(
           event: event,

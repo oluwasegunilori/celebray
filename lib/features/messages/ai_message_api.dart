@@ -66,19 +66,18 @@ class AiMessageApi {
   }) async {
     final uri = Uri.parse('${AppConstants.aiFunctionsBaseUrl}/$functionName');
     AiDebugLog.log(
-      '_postMessages: $functionName → $uri '
-      'uid=${user.uid} isAnonymous=${user.isAnonymous}',
+      '_postMessages: $functionName isAnonymous=${user.isAnonymous}',
     );
 
     final token = await user.getIdToken();
     if (token == null || token.isEmpty) {
-      AiDebugLog.error('_postMessages: empty ID token for uid=${user.uid}');
+      AiDebugLog.error('_postMessages: empty ID token');
       throw const AiMessageException(
         code: 'unauthorized',
         message: 'Could not get an auth token. Try again.',
       );
     }
-    AiDebugLog.log('_postMessages: token len=${token.length}');
+    AiDebugLog.log('_postMessages: token ready');
 
     final stopwatch = Stopwatch()..start();
     http.Response response;
@@ -96,7 +95,6 @@ class AiMessageApi {
     } catch (error, stack) {
       AiDebugLog.error(
         '_postMessages: network/timeout for $functionName',
-        error,
         stack,
       );
       rethrow;
@@ -105,23 +103,20 @@ class AiMessageApi {
 
     AiDebugLog.log(
       '_postMessages: $functionName status=${response.statusCode} '
-      'ms=${stopwatch.elapsedMilliseconds} bodyLen=${response.body.length}',
+      'ms=${stopwatch.elapsedMilliseconds}',
     );
 
     Map<String, dynamic>? payload;
     try {
       payload = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (error) {
-      AiDebugLog.error(
-        '_postMessages: invalid JSON body=${_truncate(response.body)}',
-        error,
-      );
+    } catch (error, stack) {
+      AiDebugLog.error('_postMessages: invalid JSON response', stack);
       payload = null;
     }
 
     if (payload != null) {
       AiDebugLog.log(
-        '_postMessages: payload keys=${payload.keys.join(", ")} '
+        '_postMessages: payload error=${payload["error"]} '
         'isAnonymous=${payload["isAnonymous"]} limit=${payload["limit"]}',
       );
     }
@@ -130,8 +125,7 @@ class AiMessageApi {
       final isCloudRunGate =
           response.body.contains('<html>') || response.body.contains('Unauthorized</title>');
       AiDebugLog.error(
-        '_postMessages: 401 ${isCloudRunGate ? "cloud_run_iam" : "app_auth"} '
-        'message=${payload?["message"]} body=${_truncate(response.body)}',
+        '_postMessages: 401 ${isCloudRunGate ? "cloud_run_iam" : "app_auth"}',
       );
       throw AiMessageException(
         code: 'unauthorized',
@@ -159,9 +153,7 @@ class AiMessageApi {
     }
 
     if (response.statusCode == 422) {
-      AiDebugLog.error(
-        '_postMessages: 422 content_refused message=${payload?["message"]}',
-      );
+      AiDebugLog.error('_postMessages: 422 content_refused');
       throw AiMessageException(
         code: payload?['error'] as String? ?? 'content_refused',
         message: payload?['message'] as String? ??
@@ -171,9 +163,7 @@ class AiMessageApi {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       AiDebugLog.error(
-        '_postMessages: HTTP ${response.statusCode} '
-        'error=${payload?["error"]} message=${payload?["message"]} '
-        'body=${_truncate(response.body)}',
+        '_postMessages: HTTP ${response.statusCode} error=${payload?["error"]}',
       );
       throw AiMessageException(
         code: 'unavailable',
@@ -184,9 +174,7 @@ class AiMessageApi {
 
     final messages = payload?['messages'];
     if (messages is! List || messages.isEmpty) {
-      AiDebugLog.error(
-        '_postMessages: empty messages in 2xx response body=${_truncate(response.body)}',
-      );
+      AiDebugLog.error('_postMessages: empty messages in 2xx response');
       throw const AiMessageException(
         code: 'unavailable',
         message: 'AI returned an empty response.',
@@ -195,10 +183,5 @@ class AiMessageApi {
 
     AiDebugLog.log('_postMessages: $functionName success count=${messages.length}');
     return messages.map((m) => m.toString().trim()).where((m) => m.isNotEmpty).toList();
-  }
-
-  static String _truncate(String value, [int max = 240]) {
-    if (value.length <= max) return value;
-    return '${value.substring(0, max)}…';
   }
 }

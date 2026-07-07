@@ -6,7 +6,7 @@
 
 - Reminders list with rich event profiles (relationship, closeness, memories)
 - Calendar view of upcoming celebrations
-- Local notifications (7-day advance + day-of)
+- Local notifications at midnight on the celebration day
 - AI-style message generator (warm, funny, formal tones)
 - Shareable greeting cards as PNG
 - Optional Google / Apple sign-in

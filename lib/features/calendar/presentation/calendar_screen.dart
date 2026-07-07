@@ -1,7 +1,10 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/utils/unique_id.dart';
 import 'package:celebray/core/widgets/home_toolbar_actions.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/events/widgets/event_list_card.dart';
+import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
 import 'package:celebray/features/reminders/presentation/event_detail_sheet.dart';
 import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +20,29 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime? _selectedDay = DateTime.now();
+
+  DateTime get _activeDay {
+    final day = _selectedDay ?? DateTime.now();
+    return DateTime(day.year, day.month, day.day);
+  }
+
+  void _openAddEvent([DateTime? day]) {
+    final target = day ?? _activeDay;
+    final normalized = DateTime(target.year, target.month, target.day);
+    showAddEventSheet(
+      context,
+      initialData: EventModel(
+        id: uniqueId(),
+        name: '',
+        type: '',
+        date: normalized,
+        relationship: '',
+        sex: '',
+        closeness: 5,
+      ),
+    );
+  }
 
   List<EventModel> _eventsForDay(List<EventModel> events, DateTime day) {
     return events
@@ -34,9 +59,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         title: const Text('Calendar'),
         actions: const [HomeToolbarActions()],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddEvent,
+        tooltip: 'Add celebration',
+        child: const Icon(Icons.add),
+      ),
       body: eventsAsync.when(
         data: (events) {
-          final selected = _selectedDay ?? DateTime.now();
+          final selected = _activeDay;
           final dayEvents = _eventsForDay(events, selected);
 
           return Column(
@@ -71,6 +101,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
                   });
+                  if (_eventsForDay(events, selectedDay).isEmpty) {
+                    _openAddEvent(selectedDay);
+                  }
                 },
                 onPageChanged: (focusedDay) {
                   _focusedDay = focusedDay;
@@ -92,6 +125,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       '${dayEvents.length} event${dayEvents.length == 1 ? '' : 's'}',
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      tooltip: 'Add celebration on this day',
+                      color: AppTheme.primary,
+                      onPressed: _openAddEvent,
+                    ),
                   ],
                 ),
               ),
@@ -111,34 +150,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               'No celebrations on this day',
                               style: TextStyle(color: Colors.grey.shade600),
                             ),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: _openAddEvent,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add celebration'),
+                            ),
                           ],
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.only(bottom: 80),
                         itemCount: dayEvents.length,
                         itemBuilder: (context, index) {
                           final event = dayEvents[index];
-                          return Card(
+                          return EventListCard(
+                            event: event,
+                            showDateCountdown: false,
                             margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
                               vertical: 4,
-                              horizontal: 8,
                             ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: AppTheme.primaryLight,
-                                child: const Icon(
-                                  Icons.celebration,
-                                  color: AppTheme.primary,
-                                ),
-                              ),
-                              title: Text(event.name),
-                              subtitle: Text(event.type),
-                              onTap: () => EventDetailSheet.show(
-                                context,
-                                event: event,
-                                onAction: (_) {},
-                              ),
+                            onTap: () => EventDetailSheet.show(
+                              context,
+                              event: event,
+                              onAction: (_) {},
                             ),
                           );
                         },
