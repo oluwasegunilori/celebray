@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
+import 'package:celebray/features/events/domain/event_form_options.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/core/widgets/expansion_tile.dart';
 import 'package:celebray/core/widgets/event_avatar.dart';
@@ -13,9 +14,10 @@ import 'package:image_picker/image_picker.dart';
 
 //Updates and adds new events
 class AddEventScreen extends ConsumerStatefulWidget {
-  const AddEventScreen({super.key, this.event});
+  const AddEventScreen({super.key, this.event, this.initialData});
 
   final EventModel? event;
+  final EventModel? initialData;
 
   @override
   ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
@@ -30,36 +32,86 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   late DateTime date;
   String? memory;
 
-  final List<String> eventTypes = [
-    'Birthday',
-    'Anniversary',
-    'Graduation',
-    'Promotion',
-    'Wedding',
-    'Engagement',
-    'New Baby',
-    'Housewarming',
-    'Farewell',
-  ];
+  final eventTypes = EventFormOptions.eventTypes;
+  final relationships = EventFormOptions.relationships;
+  final sexs = EventFormOptions.sexOptions;
 
-  final List<String> relationships = [
-    'Wife',
-    'Husband',
-    'Boyfriend',
-    'Girlfriend',
-    'Friend',
-    'Family',
-    'Colleague',
-    'Best Friend',
-    'Brother',
-    'Sister',
-    'Parent',
-    'Child',
-    'Partner',
-    'Neighbor',
-  ];
+  Future<void> _promptCustomEventType() async {
+    final value = await _promptCustomValue(
+      title: 'Custom event type',
+      hint: 'e.g. Quinceañera, Naming Ceremony',
+      initial: eventTypes.contains(selectedType) ? null : selectedType,
+    );
+    if (value != null && value.isNotEmpty && mounted) {
+      setState(() => selectedType = value);
+    }
+  }
 
-  final List<String> sexs = ['Male', 'Female', 'Other'];
+  Future<void> _promptCustomRelationship() async {
+    final value = await _promptCustomValue(
+      title: 'Custom relationship',
+      hint: 'e.g. Godparent, Roommate',
+      initial: relationships.contains(selectedRelationship)
+          ? null
+          : selectedRelationship,
+    );
+    if (value != null && value.isNotEmpty && mounted) {
+      _selectRelationship(value);
+    }
+  }
+
+  Future<String?> _promptCustomValue({
+    required String title,
+    required String hint,
+    String? initial,
+  }) {
+    final controller = TextEditingController(text: initial ?? '');
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (value) {
+            final trimmed = value.trim();
+            if (trimmed.isNotEmpty) {
+              Navigator.pop(dialogContext, trimmed);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final trimmed = controller.text.trim();
+              if (trimmed.isEmpty) return;
+              Navigator.pop(dialogContext, trimmed);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _selectRelationship(String relation) {
+    setState(() {
+      selectedRelationship = relation;
+      final suggested = EventFormOptions.suggestedSexForRelationship(relation);
+      if (suggested != null) {
+        selectedSex = suggested;
+      }
+    });
+  }
 
   double closeness = 5;
 
@@ -72,23 +124,26 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   late TextEditingController eventDateController;
   TextEditingController memoriesController = TextEditingController();
 
+  EventModel? get _seed => widget.event ?? widget.initialData;
+  bool get _isEditing => widget.event != null;
+
   @override
   void initState() {
     super.initState();
-    eventNameController = TextEditingController(text: widget.event?.name ?? '');
+    eventNameController = TextEditingController(text: _seed?.name ?? '');
     eventDateController = TextEditingController(
-      text: widget.event != null
-          ? dateFormatterDay.format(widget.event!.date)
-          : '',
+      text: _seed != null ? dateFormatterDay.format(_seed!.date) : '',
     );
-    memories = widget.event?.memories ?? [];
-    selectedType = widget.event?.type ?? eventTypes[0];
-    selectedRelationship = widget.event?.relationship ?? relationships[0];
-    name = widget.event?.name ?? '';
-    date = widget.event?.date ?? DateTime.now();
-    selectedSex = widget.event?.sex ?? sexs[0];
-    closeness = widget.event?.closeness.toDouble() ?? 5;
-    imagePath = widget.event?.imagePath;
+    memories = _seed?.memories ?? [];
+    selectedType = _seed?.type ?? eventTypes.first;
+    selectedRelationship = _seed?.relationship ?? relationships.first;
+    name = _seed?.name ?? '';
+    date = _seed?.date ?? _atMidnight(DateTime.now());
+    selectedSex = _seed?.sex ??
+        EventFormOptions.suggestedSexForRelationship(selectedRelationship) ??
+        sexs[0];
+    closeness = _seed?.closeness.toDouble() ?? 5;
+    imagePath = _seed?.imagePath;
     if (imagePath != null && !File(imagePath!).existsSync()) {
       imagePath = null;
     }
@@ -147,10 +202,11 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       );
 
                       if (pickedDate != null) {
-                        // 2️⃣ Pick the time
                         final pickedTime = await showTimePicker(
                           context: context,
-                          initialTime: TimeOfDay.fromDateTime(date),
+                          initialTime: _seed != null
+                              ? TimeOfDay.fromDateTime(date)
+                              : const TimeOfDay(hour: 0, minute: 0),
                         );
 
                         if (pickedTime != null) {
@@ -230,14 +286,25 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: eventTypes.map((type) {
-                        final isSelected = selectedType == type;
-                        return _SelectableChip(
-                          label: type,
-                          isSelected: isSelected,
-                          onTap: () => setState(() => selectedType = type),
-                        );
-                      }).toList(),
+                      children: [
+                        ...EventFormOptions.optionsWithCustom(
+                          presets: eventTypes,
+                          current: selectedType,
+                        ).map((type) {
+                          final isSelected = selectedType == type;
+                          return _SelectableChip(
+                            label: type,
+                            isSelected: isSelected,
+                            onTap: () => setState(() => selectedType = type),
+                          );
+                        }),
+                        _SelectableChip(
+                          label: EventFormOptions.addYoursLabel,
+                          isSelected: false,
+                          isAddOption: true,
+                          onTap: _promptCustomEventType,
+                        ),
+                      ],
                     ),
                   ),
 
@@ -247,15 +314,25 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     child: Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: relationships.map((relation) {
-                        final isSelected = selectedRelationship == relation;
-                        return _SelectableChip(
-                          label: relation,
-                          isSelected: isSelected,
-                          onTap: () =>
-                              setState(() => selectedRelationship = relation),
-                        );
-                      }).toList(),
+                      children: [
+                        ...EventFormOptions.optionsWithCustom(
+                          presets: relationships,
+                          current: selectedRelationship,
+                        ).map((relation) {
+                          final isSelected = selectedRelationship == relation;
+                          return _SelectableChip(
+                            label: relation,
+                            isSelected: isSelected,
+                            onTap: () => _selectRelationship(relation),
+                          );
+                        }),
+                        _SelectableChip(
+                          label: EventFormOptions.addYoursLabel,
+                          isSelected: false,
+                          isAddOption: true,
+                          onTap: _promptCustomRelationship,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -387,10 +464,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 ),
               ),
               child: Text(
-                widget.event != null ? 'Update Event' : 'Save Event',
+                _isEditing ? 'Update Event' : 'Save Event',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
                   final event = EventModel(
@@ -405,12 +482,14 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     imagePath: _hasValidImage ? imagePath : null,
                     generatedMessage: widget.event?.generatedMessage,
                   );
-                  if (widget.event != null) {
-                    eventNotifier.updateEvent(event);
+                  if (_isEditing) {
+                    await eventNotifier.updateEvent(event);
                   } else {
-                    eventNotifier.addEvent(event);
+                    await eventNotifier.addEvent(event);
                   }
-                  Navigator.pop(context);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
             ),
@@ -473,34 +552,51 @@ class _SelectableChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isAddOption;
 
   const _SelectableChip({
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.isAddOption = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectedStyle = isAddOption
+        ? BoxDecoration(
+            color: AppTheme.accentLight,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.accent, width: 1.5),
+          )
+        : BoxDecoration(
+            color: isSelected ? AppTheme.black : AppTheme.surfaceMuted,
+            borderRadius: BorderRadius.circular(20),
+          );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.black : AppTheme.surfaceMuted,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: selectedStyle,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isAddOption) ...[
+              const Icon(Icons.add, size: 16, color: AppTheme.accentDark),
+              const SizedBox(width: 4),
+            ],
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.black,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isAddOption
+                    ? AppTheme.black
+                    : (isSelected ? Colors.white : AppTheme.black),
+                fontWeight:
+                    isSelected || isAddOption ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-            if (isSelected) ...[
+            if (isSelected && !isAddOption) ...[
               const SizedBox(width: 6),
               const Icon(Icons.check, size: 16, color: Colors.white),
             ],
@@ -510,3 +606,6 @@ class _SelectableChip extends StatelessWidget {
     );
   }
 }
+
+DateTime _atMidnight(DateTime value) =>
+    DateTime(value.year, value.month, value.day);

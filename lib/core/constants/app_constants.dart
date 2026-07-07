@@ -10,4 +10,14 @@ class AppConstants {
       'Reminders for upcoming birthdays and celebrations';
 
   static const int defaultReminderDaysBefore = 7;
+
+  static const String firebaseProjectId = 'celebray-fa7ae';
+  static const String aiFunctionsRegion = 'us-central1';
+  static const int aiDailyLimit = 20;
+
+  static const String aiFunctionsBaseUrl = String.fromEnvironment(
+    'AI_FUNCTIONS_BASE_URL',
+    defaultValue:
+        'https://us-central1-celebray-fa7ae.cloudfunctions.net',
+  );
 }

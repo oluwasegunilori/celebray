@@ -1,8 +1,10 @@
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/core/constants/app_constants.dart';
+import 'package:celebray/features/calendar_import/widgets/calendar_import_sheet.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/auth/data/auth_service.dart';
 import 'package:celebray/features/notifications/notification_service.dart';
+import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
 import 'package:celebray/features/settings/providers/settings_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -163,6 +165,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 await _rescheduleReminders();
               },
             ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.event_available, color: AppTheme.primary),
+            title: const Text('Import from Calendar'),
+            subtitle: const Text('Find birthdays and anniversaries to add'),
+            onTap: () async {
+              final draft = await CalendarImportSheet.show(context);
+              if (draft != null && context.mounted) {
+                showAddEventSheet(context, initialData: draft);
+              }
+            },
           ),
           const Divider(),
           ListTile(

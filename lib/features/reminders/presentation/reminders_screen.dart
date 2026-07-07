@@ -1,13 +1,14 @@
 import 'package:celebray/core/theme/app_theme.dart';
-import 'package:celebray/features/events/providers/event_provider.dart';
-import 'package:celebray/features/generator/presentation/generator_screen.dart';
+import 'package:celebray/core/widgets/home_toolbar_actions.dart';
 import 'package:celebray/features/events/domain/event_actions.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
-import 'package:celebray/features/reminders/presentation/add_event_screen.dart';
+import 'package:celebray/features/events/providers/event_provider.dart';
+import 'package:celebray/features/generator/presentation/edit_message_screen.dart';
+import 'package:celebray/features/generator/presentation/generator_screen.dart';
+import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
 import 'package:celebray/features/reminders/presentation/event_detail_sheet.dart';
 import 'package:celebray/features/reminders/widgets/reminder_list.dart';
-import 'package:celebray/core/widgets/sheet_header.dart';
-import 'package:celebray/features/sharing/share_service.dart';
+import 'package:celebray/features/sharing/widgets/share_event_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,67 +20,55 @@ class RemindersScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(eventProvider);
     final eventNotifier = ref.read(eventProvider.notifier);
 
-    void showAddReminderDialog({
-      required BuildContext context,
-      EventModel? event,
-    }) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) {
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.8,
-            minChildSize: 0.5,
-            maxChildSize: 0.85,
-            builder: (context, scrollController) {
-              return Material(
-                child: Column(
-                  children: [
-                    SheetHeader(
-                      title: event != null ? 'Edit Event' : 'Add Event',
-                      onClose: () => Navigator.pop(context),
-                    ),
-                    Expanded(child: AddEventScreen(event: event)),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+    void openAddEventSheet({EventModel? event, EventModel? initialData}) {
+      showAddEventSheet(
+        context,
+        event: event,
+        initialData: initialData,
       );
     }
 
-    Future<void> confirmClearAll(List<EventModel> events) async {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Clear all events?'),
-          content: const Text(
-            'This will permanently delete all your celebrations and cancel their reminders.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+    void openCalendarImport() {
+      HomeToolbarActions.openCalendarImport(context);
+    }
+
+    Future<void> deleteWithUndo(EventModel event) async {
+      final label = event.name.isNotEmpty ? event.name : event.type;
+
+      await eventNotifier.deleteEvent(event);
+
+      if (!context.mounted) return;
+
+      final messenger = ScaffoldMessenger.of(context);
+      final reason = await messenger
+          .showSnackBar(
+            SnackBar(
+              content: Text(
+                'Deleted "$label"',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'Undo',
+                textColor: AppTheme.accent,
+                onPressed: () {},
+              ),
+              duration: const Duration(seconds: 4),
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete All'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed == true) {
-        await eventNotifier.deleteAllEvents(events);
+          )
+          .closed;
+
+      if (reason == SnackBarClosedReason.action) {
+        await eventNotifier.addEvent(event);
       }
     }
 
-    void handleAction(EventAction action, List<EventModel> events) {
+    void handleAction(
+      EventAction action,
+      List<EventModel> events, [
+      EventModel? eventContext,
+    ]) {
       switch (action) {
         case ViewEvent(:var eventId):
           final event = events.firstWhere((e) => e.id == eventId);
@@ -89,18 +78,22 @@ class RemindersScreen extends ConsumerWidget {
             onAction: (a) => handleAction(a, events),
           );
         case EditEvent(:var event):
-          showAddReminderDialog(context: context, event: event);
+          openAddEventSheet(event: event);
         case DeleteEvent(:var eventId):
-          final event = events.firstWhere((e) => e.id == eventId);
-          eventNotifier.deleteEvent(event);
+          final event = eventContext ??
+              events.firstWhere((e) => e.id == eventId);
+          deleteWithUndo(event);
         case ShareEvent(:var eventId):
           final event = events.firstWhere((e) => e.id == eventId);
-          ShareService.shareEventText(event);
+          ShareEventSheet.show(context, event: event);
         case GenerateMessage(:var eventId):
           final event = events.firstWhere((e) => e.id == eventId);
+          final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => GeneratorScreen(initialEvent: event),
+              builder: (_) => hasMessage
+                  ? EditMessageScreen(event: event)
+                  : GeneratorScreen(initialEvent: event),
             ),
           );
       }
@@ -109,37 +102,25 @@ class RemindersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reminders'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_sweep),
-            tooltip: 'Clear all',
-            onPressed: () {
-              final events = eventsAsync.value;
-              if (events != null && events.isNotEmpty) {
-                confirmClearAll(events);
-              }
-            },
-          ),
-        ],
+        actions: const [HomeToolbarActions()],
       ),
       body: eventsAsync.when(
         data: (events) => events.isEmpty
             ? _EmptyRemindersState(
-                onAdd: () => showAddReminderDialog(context: context),
+                onAdd: () => openAddEventSheet(),
+                onImport: openCalendarImport,
               )
             : ReminderList(
                 events: events,
-                onAction: (action) => handleAction(action, events),
+                onAction: (action, event) =>
+                    handleAction(action, events, event),
+                onDelete: deleteWithUndo,
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showAddReminderDialog(context: context),
+        onPressed: () => openAddEventSheet(),
         child: const Icon(Icons.add),
       ),
     );
@@ -148,8 +129,12 @@ class RemindersScreen extends ConsumerWidget {
 
 class _EmptyRemindersState extends StatelessWidget {
   final VoidCallback onAdd;
+  final VoidCallback onImport;
 
-  const _EmptyRemindersState({required this.onAdd});
+  const _EmptyRemindersState({
+    required this.onAdd,
+    required this.onImport,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +165,12 @@ class _EmptyRemindersState extends StatelessWidget {
               onPressed: onAdd,
               icon: const Icon(Icons.add),
               label: const Text('Add your first celebration'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onImport,
+              icon: const Icon(Icons.event_available_outlined),
+              label: const Text('Import from calendar'),
             ),
           ],
         ),

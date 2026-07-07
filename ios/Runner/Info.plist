@@ -41,6 +41,10 @@
 	<string>Celebray needs photo library access to add photos to your celebrations.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Celebray needs camera access to take photos for your celebrations.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Celebray reads your calendar to suggest birthdays and anniversaries you may want to track.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Celebray reads your calendar to suggest birthdays and anniversaries you may want to track.</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>GIDClientID</key>

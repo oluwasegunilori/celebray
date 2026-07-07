@@ -1,8 +1,15 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/widgets/home_toolbar_actions.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_generator_service.dart';
+import 'package:celebray/features/messages/widgets/message_generation_notice.dart';
+import 'package:celebray/features/sharing/models/card_style.dart';
 import 'package:celebray/features/sharing/share_service.dart';
+import 'package:celebray/features/sharing/widgets/card_alignment_picker.dart';
+import 'package:celebray/features/sharing/widgets/card_color_picker.dart';
+import 'package:celebray/features/sharing/widgets/card_typography_picker.dart';
 import 'package:celebray/features/sharing/widgets/greeting_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,8 +27,13 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
   String? _selectedEventId;
   String _selectedTone = 'warm';
   int _selectedMessageIndex = 0;
-  int _cardThemeIndex = 0;
+  int _cardColorIndex = 0;
+  int _cardTypographyIndex = 0;
+  CardTextAlignment _cardAlignment = CardStyles.defaultAlignment;
   List<String> _messages = [];
+  bool _isGenerating = false;
+  String? _generationNotice;
+  MessageGenerationSource? _generationSource;
   final _cardKey = GlobalKey();
 
   @override
@@ -38,13 +50,26 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
     return null;
   }
 
-  void _generateMessages(EventModel event) {
+  Future<void> _generateMessages(EventModel event) async {
     setState(() {
-      _messages = MessageGeneratorService.generateMessages(
-        event,
-        tone: _selectedTone,
-      );
+      _isGenerating = true;
+      _generationNotice = null;
+      _generationSource = null;
+    });
+
+    final result = await MessageGeneratorService.generateMessages(
+      event,
+      tone: _selectedTone,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _messages = result.messages;
       _selectedMessageIndex = 0;
+      _isGenerating = false;
+      _generationNotice = result.notice;
+      _generationSource = result.source;
     });
   }
 
@@ -71,11 +96,11 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
     }
   }
 
-  Future<void> _shareCard(EventModel event) async {
+  Future<void> _shareCard(EventModel event, BuildContext shareContext) async {
     if (_messages.isEmpty) return;
     await ShareService.shareGreetingCard(
-      event: event,
       cardKey: _cardKey,
+      shareContext: shareContext,
     );
   }
 
@@ -86,12 +111,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Generate Message'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
-          ),
-        ],
+        actions: const [HomeToolbarActions()],
       ),
       body: eventsAsync.when(
         data: (events) {
@@ -135,10 +155,16 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                   setState(() {
                     _selectedEventId = eventId;
                     _messages = [];
+                    _generationNotice = null;
+                    _generationSource = null;
                   });
                 },
               ),
-              const SizedBox(height: 20),
+              MessageGenerationNotice(
+                notice: _generationNotice,
+                source: _generationSource,
+              ),
+              const SizedBox(height: 4),
               const Text(
                 'Tone',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -159,11 +185,19 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: selectedEvent != null
+                  onPressed: selectedEvent != null && !_isGenerating
                       ? () => _generateMessages(selectedEvent)
                       : null,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generate Messages'),
+                  icon: _isGenerating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    _isGenerating ? 'Generating…' : 'Generate Messages',
+                  ),
                 ),
               ),
               if (_messages.isNotEmpty && selectedEvent != null) ...[
@@ -191,50 +225,58 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => _shareCard(selectedEvent),
-                        child: const Text('Share Card'),
+                      child: Builder(
+                        builder: (shareContext) => ElevatedButton(
+                          onPressed: () => _shareCard(selectedEvent, shareContext),
+                          child: const Text('Share Card'),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Card preview',
+                  'Color',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: List.generate(5, (i) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _cardThemeIndex = i),
-                        child: CircleAvatar(
-                          radius: 16,
-                          backgroundColor:
-                              GreetingCardWidget.cardGradients[i % 5][0],
-                          child: _cardThemeIndex == i
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 16,
-                                  color: Colors.white,
-                                )
-                              : null,
-                        ),
-                      ),
-                    );
-                  }),
+                CardColorPicker(
+                  selectedIndex: _cardColorIndex,
+                  onSelected: (i) => setState(() => _cardColorIndex = i),
                 ),
                 const SizedBox(height: 16),
+                const Text(
+                  'Text style',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                CardTypographyPicker(
+                  selectedIndex: _cardTypographyIndex,
+                  onSelected: (i) => setState(() => _cardTypographyIndex = i),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Alignment',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                CardAlignmentPicker(
+                  selected: _cardAlignment,
+                  onSelected: (a) => setState(() => _cardAlignment = a),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Card preview',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
                 Center(
-                  child: RepaintBoundary(
-                    key: _cardKey,
-                    child: GreetingCardWidget(
-                      event: selectedEvent,
-                      message: _messages[_selectedMessageIndex],
-                      themeIndex: _cardThemeIndex,
-                    ),
+                  child: GreetingCardPreview(
+                    cardKey: _cardKey,
+                    message: _messages[_selectedMessageIndex],
+                    colorIndex: _cardColorIndex,
+                    typographyIndex: _cardTypographyIndex,
+                    alignment: _cardAlignment,
                   ),
                 ),
               ],

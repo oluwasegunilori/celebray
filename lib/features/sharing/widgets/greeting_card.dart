@@ -1,108 +1,209 @@
-import 'package:celebray/core/utils/date_format.dart';
-import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/sharing/models/card_style.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class GreetingCardWidget extends StatelessWidget {
-  final EventModel event;
   final String message;
-  final int themeIndex;
+  final int colorIndex;
+  final int typographyIndex;
+  final CardTextAlignment alignment;
 
   const GreetingCardWidget({
     super.key,
-    required this.event,
     required this.message,
-    this.themeIndex = 0,
+    this.colorIndex = 0,
+    this.typographyIndex = 0,
+    this.alignment = CardStyles.defaultAlignment,
   });
 
-  static const cardGradients = [
-    [Color(0xFF111111), Color(0xFF333333)],
-    [Color(0xFFD4A017), Color(0xFF9A7209)],
-    [Color(0xFF111111), Color(0xFFD4A017)],
-    [Color(0xFF2D2D2D), Color(0xFF111111)],
-    [Color(0xFF4A4A4A), Color(0xFF111111)],
-  ];
+  TextStyle _messageStyle(CardColorTheme color, CardTypographyStyle typo) {
+    final size = CardStyles.messageFontSize(message, typo.fontSize);
+    return GoogleFonts.getFont(
+      typo.fontFamily,
+      fontSize: size,
+      fontWeight: typo.fontWeight,
+      fontStyle: typo.fontStyle,
+      letterSpacing: typo.letterSpacing,
+      height: typo.height,
+      color: color.textColor,
+    );
+  }
+
+  TextStyle _brandStyle(CardColorTheme color, CardTypographyStyle typo) {
+    return GoogleFonts.getFont(
+      typo.fontFamily,
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 1.4,
+      color: color.brandColor,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colors = cardGradients[themeIndex % cardGradients.length];
+    final color = CardStyles.colorAt(colorIndex);
+    final typo = CardStyles.typographyAt(typographyIndex);
+    final align = CardStyles.textAlign(alignment);
+    final geometry = CardStyles.geometryAlignment(alignment);
 
     return Container(
-      width: 340,
-      height: 480,
+      width: 360,
+      height: 520,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: colors,
+          colors: color.gradient,
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+      ),
+      padding: const EdgeInsets.fromLTRB(40, 48, 40, 36),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Align(
+              alignment: geometry,
+              child: SizedBox(
+                width: double.infinity,
+                child: typo.showQuoteMarks
+                    ? _QuotedMessage(
+                        message: message,
+                        style: _messageStyle(color, typo),
+                        align: align,
+                        quoteColor: color.textColor.withValues(alpha: 0.25),
+                      )
+                    : _MessageBlock(
+                        message: message,
+                        style: _messageStyle(color, typo),
+                        align: align,
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 28,
+                height: 1,
+                color: color.brandColor.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 10),
+              Text('— Celebray', style: _brandStyle(color, typo)),
+            ],
           ),
         ],
       ),
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            event.type.toUpperCase(),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 14,
-              letterSpacing: 2,
-              fontWeight: FontWeight.w600,
-            ),
+    );
+  }
+}
+
+class _MessageBlock extends StatelessWidget {
+  final String message;
+  final TextStyle style;
+  final TextAlign align;
+
+  const _MessageBlock({
+    required this.message,
+    required this.style,
+    required this.align,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      message,
+      textAlign: align,
+      style: style,
+    );
+  }
+}
+
+class _QuotedMessage extends StatelessWidget {
+  final String message;
+  final TextStyle style;
+  final TextAlign align;
+  final Color quoteColor;
+
+  const _QuotedMessage({
+    required this.message,
+    required this.style,
+    required this.align,
+    required this.quoteColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: -18,
+          left: align == TextAlign.right ? null : (align == TextAlign.center ? 0 : -4),
+          right: align == TextAlign.right ? -4 : (align == TextAlign.center ? 0 : null),
+          child: align == TextAlign.center
+              ? Text(
+                  '“',
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(
+                    fontSize: (style.fontSize ?? 20) * 2.2,
+                    color: quoteColor,
+                    height: 1,
+                  ),
+                )
+              : Text(
+                  '“',
+                  style: style.copyWith(
+                    fontSize: (style.fontSize ?? 20) * 2.2,
+                    color: quoteColor,
+                    height: 1,
+                  ),
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            message,
+            textAlign: align,
+            style: style,
           ),
-          const SizedBox(height: 8),
-          Text(
-            event.name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            dateFormatterDay.format(event.date),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                height: 1.4,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '— Celebray',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Rounded preview wrapper; [RepaintBoundary] inside stays square for export.
+class GreetingCardPreview extends StatelessWidget {
+  final GlobalKey cardKey;
+  final String message;
+  final int colorIndex;
+  final int typographyIndex;
+  final CardTextAlignment alignment;
+
+  const GreetingCardPreview({
+    super.key,
+    required this.cardKey,
+    required this.message,
+    this.colorIndex = 0,
+    this.typographyIndex = 0,
+    this.alignment = CardStyles.defaultAlignment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: RepaintBoundary(
+        key: cardKey,
+        child: GreetingCardWidget(
+          message: message,
+          colorIndex: colorIndex,
+          typographyIndex: typographyIndex,
+          alignment: alignment,
+        ),
       ),
     );
   }

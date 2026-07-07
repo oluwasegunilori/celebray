@@ -257,6 +257,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.14"
+  device_calendar:
+    dependency: "direct main"
+    description:
+      name: device_calendar
+      sha256: e5170a5a5a2027135705b099fe5f9b0dce415e27c94997b34e64f28de54e4226
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.9.0"
   equatable:
     dependency: "direct main"
     description:
@@ -552,6 +560,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.3"
+  google_fonts:
+    dependency: "direct main"
+    description:
+      name: google_fonts
+      sha256: "4e9391085e524954a51e3625b7c9c7e9851dc3f376603208bb45c24b9a66255d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.1.0"
   google_identity_services_web:
     dependency: transitive
     description:
@@ -1213,6 +1229,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.2"
+  sprintf:
+    dependency: transitive
+    description:
+      name: sprintf
+      sha256: ec76d38910b6f1c854ce1353c62d37e7ef82b53dc5ab048c25400d35970776d1
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.2"
   sqflite:
     dependency: "direct main"
     description:

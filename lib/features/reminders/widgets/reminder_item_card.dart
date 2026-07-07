@@ -167,7 +167,11 @@ class ReminderItemCard extends StatelessWidget {
                       ),
                       PopupMenuItem(
                         value: GenerateMessage(event.id),
-                        child: const Text('Generate Message'),
+                        child: Text(
+                          event.generatedMessage?.trim().isNotEmpty ?? false
+                              ? 'Edit Message'
+                              : 'Generate Message',
+                        ),
                       ),
                     ],
                   ),

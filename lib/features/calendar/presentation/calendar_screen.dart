@@ -1,4 +1,5 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/widgets/home_toolbar_actions.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/reminders/presentation/event_detail_sheet.dart';
@@ -31,12 +32,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendar'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
-          ),
-        ],
+        actions: const [HomeToolbarActions()],
       ),
       body: eventsAsync.when(
         data: (events) {

@@ -2,7 +2,7 @@ import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/features/events/domain/event_actions.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/core/widgets/event_avatar.dart';
-import 'package:celebray/features/sharing/share_service.dart';
+import 'package:celebray/features/sharing/widgets/share_event_sheet.dart';
 import 'package:celebray/core/utils/date_format.dart';
 import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +45,8 @@ class EventDetailSheet extends ConsumerWidget {
                 ? 'Tomorrow'
                 : 'In $daysUntil days')
         : null;
+
+    final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -99,20 +101,16 @@ class EventDetailSheet extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (badge != null) ...[
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Chip(
-                              label: Text(badge),
-                              backgroundColor: AppTheme.primaryLight,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
+                  if (badge != null)
+                    Chip(
+                      label: Text(badge),
+                      backgroundColor: AppTheme.primaryLight,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -180,8 +178,8 @@ class EventDetailSheet extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () async {
-                        await ShareService.shareEventText(event);
+                      onPressed: () {
+                        ShareEventSheet.show(context, event: event);
                       },
                       icon: const Icon(Icons.share),
                       label: const Text('Share'),
@@ -197,8 +195,8 @@ class EventDetailSheet extends ConsumerWidget {
                     Navigator.pop(context);
                     onAction(GenerateMessage(event.id));
                   },
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generate Message'),
+                  icon: Icon(hasMessage ? Icons.edit_note : Icons.auto_awesome),
+                  label: Text(hasMessage ? 'Edit Message' : 'Generate Message'),
                 ),
               ),
             ],

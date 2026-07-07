@@ -134,6 +134,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: black,
         contentTextStyle: const TextStyle(color: white),
+        actionTextColor: accent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
