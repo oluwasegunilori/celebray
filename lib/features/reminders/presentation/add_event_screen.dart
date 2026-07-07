@@ -393,6 +393,15 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     return false;
   }
 
+  List<String> _effectiveMemories() {
+    final items = List<String>.from(memories);
+    final pending = memoriesController.text.trim();
+    if (pending.isNotEmpty && !items.contains(pending)) {
+      items.add(pending);
+    }
+    return items;
+  }
+
   EventModel _buildEventModel() {
     return EventModel(
       id: widget.event?.id ?? uniqueId(),
@@ -400,7 +409,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
       type: selectedType!,
       date: date!,
       relationship: selectedRelationship!,
-      memories: memories,
+      memories: _effectiveMemories(),
       sex: selectedSex!,
       closeness: closeness!.round(),
       imagePath: _hasValidImage ? imagePath : null,
@@ -417,7 +426,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     final faithLabel = event.faithContext.isEmpty
         ? 'Not specified'
         : event.faithContext;
-    final memoriesLabel = event.memories.isEmpty
+    final additionalInfoLabel = event.memories.isEmpty
         ? 'None'
         : event.memories.join(', ');
 
@@ -437,7 +446,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   _summaryRow('Closeness', '${event.closeness}/10'),
                   _summaryRow('Faith context', faithLabel),
                   _summaryRow('Photo', _hasValidImage ? 'Added' : 'None'),
-                  _summaryRow('Memories', memoriesLabel),
+                  _summaryRow('Additional info', additionalInfoLabel),
                 ],
               ),
             ),
@@ -883,15 +892,15 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   _buildClosenessSection(),
 
                   const SizedBox(height: 20),
-                  _buildSectionTitle('Memories (optional)'),
+                  _buildSectionTitle('Additional info (optional)'),
 
                   Row(
                     children: [
                       Expanded(
                         child: _buildTextField(
                           controller: memoriesController,
-                          label: 'Add Memory',
-                          hint: "e.g. Karaoke night 🎤",
+                          label: 'Add info',
+                          hint: 'e.g. loves jazz, always late, favorite quote',
                           icon: Icons.book,
                           optional: true,
                           onSaved:

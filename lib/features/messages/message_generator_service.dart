@@ -1,6 +1,7 @@
 import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/auth/data/ai_auth_service.dart';
+import 'package:celebray/features/messages/ai_debug_log.dart';
 import 'package:celebray/features/messages/ai_message_api.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_template_generator.dart';
@@ -17,32 +18,56 @@ class MessageGeneratorService {
     EventModel event, {
     String tone = 'warm',
   }) async {
-    final session = await AiAuthService.ensureSession();
-    if (session == null) {
+    AiDebugLog.log(
+      'generateMessages: start event="${event.name}" tone=$tone',
+    );
+
+    final sessionResult = await AiAuthService.ensureSession();
+    if (!sessionResult.isSuccess) {
+      AiDebugLog.error(
+        'generateMessages: session failed — ${sessionResult.failureMessage}',
+      );
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.generate(event, tone: tone),
         source: MessageGenerationSource.template,
-        notice: 'AI is unavailable. Showing template messages instead.',
+        notice: sessionResult.failureMessage ??
+            'AI is unavailable. Showing template messages instead.',
       );
     }
+
+    final session = sessionResult.session!;
+    AiDebugLog.log(
+      'generateMessages: session ok uid=${session.user.uid} '
+      'isAnonymous=${session.isAnonymous}',
+    );
 
     try {
       final messages = await AiMessageApi.generateMessages(
         event: event,
         tone: tone,
+        user: session.user,
+      );
+      AiDebugLog.log(
+        'generateMessages: AI ok count=${messages.length} source=ai',
       );
       return MessageGenerationResult(
         messages: messages,
         source: MessageGenerationSource.ai,
         notice: session.isAnonymous ? AppConstants.guestAiNotice() : null,
       );
-    } on AiMessageException catch (error) {
+    } on AiMessageException catch (error, stack) {
+      AiDebugLog.error(
+        'generateMessages: AiMessageException code=${error.code}',
+        error.message,
+        stack,
+      );
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.generate(event, tone: tone),
         source: MessageGenerationSource.template,
         notice: error.message,
       );
-    } catch (_) {
+    } catch (error, stack) {
+      AiDebugLog.error('generateMessages: unexpected failure', error, stack);
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.generate(event, tone: tone),
         source: MessageGenerationSource.template,
@@ -57,8 +82,16 @@ class MessageGeneratorService {
     String instructions = '',
     String tone = 'warm',
   }) async {
-    final session = await AiAuthService.ensureSession();
-    if (session == null) {
+    AiDebugLog.log(
+      'touchUpMessage: start event="${event.name}" '
+      'messageLen=${currentMessage.length} instructionsLen=${instructions.length}',
+    );
+
+    final sessionResult = await AiAuthService.ensureSession();
+    if (!sessionResult.isSuccess) {
+      AiDebugLog.error(
+        'touchUpMessage: session failed — ${sessionResult.failureMessage}',
+      );
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.touchUp(
           event: event,
@@ -67,22 +100,38 @@ class MessageGeneratorService {
           tone: tone,
         ),
         source: MessageGenerationSource.template,
-        notice: 'AI is unavailable. Showing template suggestions instead.',
+        notice: sessionResult.failureMessage ??
+            'AI is unavailable. Showing template suggestions instead.',
       );
     }
+
+    final session = sessionResult.session!;
+    AiDebugLog.log(
+      'touchUpMessage: session ok uid=${session.user.uid} '
+      'isAnonymous=${session.isAnonymous}',
+    );
 
     try {
       final messages = await AiMessageApi.touchUpMessage(
         event: event,
         currentMessage: currentMessage,
         instructions: instructions,
+        user: session.user,
+      );
+      AiDebugLog.log(
+        'touchUpMessage: AI ok count=${messages.length} source=ai',
       );
       return MessageGenerationResult(
         messages: messages,
         source: MessageGenerationSource.ai,
         notice: session.isAnonymous ? AppConstants.guestAiNotice() : null,
       );
-    } on AiMessageException catch (error) {
+    } on AiMessageException catch (error, stack) {
+      AiDebugLog.error(
+        'touchUpMessage: AiMessageException code=${error.code}',
+        error.message,
+        stack,
+      );
       if (error.code == 'content_refused') {
         return MessageGenerationResult(
           messages: const [],
@@ -101,7 +150,8 @@ class MessageGeneratorService {
         source: MessageGenerationSource.template,
         notice: error.message,
       );
-    } catch (_) {
+    } catch (error, stack) {
+      AiDebugLog.error('touchUpMessage: unexpected failure', error, stack);
       return MessageGenerationResult(
         messages: MessageTemplateGenerator.touchUp(
           event: event,

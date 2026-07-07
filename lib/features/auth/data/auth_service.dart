@@ -1,6 +1,8 @@
 import 'package:celebray/features/auth/domain/app_user.dart';
 import 'package:celebray/features/auth/domain/ai_auth_session.dart';
+import 'package:celebray/features/auth/domain/ai_auth_session_result.dart';
 import 'package:celebray/features/auth/data/user_storage_service.dart';
+import 'package:celebray/features/messages/ai_debug_log.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -26,21 +28,71 @@ class AuthService {
     return null;
   }
 
-  Future<AiAuthSession?> ensureAiSession() async {
+  Future<AiAuthSessionResult> ensureAiSession() async {
+    AiDebugLog.log('ensureAiSession: start');
     try {
       var user = _auth.currentUser;
       if (user == null) {
+        AiDebugLog.log('ensureAiSession: no currentUser — signing in anonymously');
         final credential = await _auth.signInAnonymously();
         user = credential.user;
+        AiDebugLog.log(
+          'ensureAiSession: signInAnonymously done '
+          'uid=${user?.uid ?? "null"} isAnonymous=${user?.isAnonymous}',
+        );
+      } else {
+        AiDebugLog.log(
+          'ensureAiSession: reusing currentUser '
+          'uid=${user.uid} isAnonymous=${user.isAnonymous}',
+        );
       }
-      if (user == null) return null;
+      if (user == null) {
+        AiDebugLog.error('ensureAiSession: user still null after sign-in');
+        return const AiAuthSessionResult.failure(
+          'Could not start a guest AI session. Try again.',
+        );
+      }
 
-      return AiAuthSession(
-        user: user,
-        isAnonymous: user.isAnonymous,
+      final token = await user.getIdToken(true);
+      AiDebugLog.log(
+        'ensureAiSession: token refreshed '
+        'len=${token?.length ?? 0} uid=${user.uid} isAnonymous=${user.isAnonymous}',
       );
-    } catch (_) {
-      return null;
+
+      AiDebugLog.log('ensureAiSession: success');
+      return AiAuthSessionResult.success(
+        AiAuthSession(
+          user: user,
+          isAnonymous: user.isAnonymous,
+        ),
+      );
+    } on FirebaseAuthException catch (error, stack) {
+      AiDebugLog.error(
+        'ensureAiSession FirebaseAuthException code=${error.code}',
+        error.message,
+        stack,
+      );
+      return AiAuthSessionResult.failure(_guestSessionErrorMessage(error));
+    } catch (error, stack) {
+      AiDebugLog.error('ensureAiSession unexpected failure', error, stack);
+      return const AiAuthSessionResult.failure(
+        'Guest AI is unavailable right now. Showing templates instead.',
+      );
+    }
+  }
+
+  String _guestSessionErrorMessage(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'operation-not-allowed':
+        return 'Guest AI is off in Firebase. Enable Anonymous sign-in under '
+            'Authentication → Sign-in method, then try again.';
+      case 'network-request-failed':
+        return 'No internet connection. Connect to use guest AI.';
+      case 'too-many-requests':
+        return 'Too many sign-in attempts. Wait a moment and try again.';
+      default:
+        return 'Guest AI sign-in failed (${error.code}). '
+            'Showing template messages instead.';
     }
   }
 

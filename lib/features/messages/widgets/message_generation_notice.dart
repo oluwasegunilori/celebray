@@ -40,9 +40,10 @@ class MessageGenerationNotice extends StatelessWidget {
     }
 
     final isGuest = AiAuthService.isGuest;
-    final showSignIn = isGuest ||
-        ((notice?.toLowerCase().contains('sign in') ?? false) &&
-            !AiAuthService.hasFullAccount);
+    final showSignIn = (isGuest ||
+            ((notice?.toLowerCase().contains('sign in') ?? false) &&
+                !AiAuthService.hasFullAccount)) &&
+        !(notice?.toLowerCase().contains('anonymous sign-in') ?? false);
 
     return Container(
       width: double.infinity,

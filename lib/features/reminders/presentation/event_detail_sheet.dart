@@ -158,7 +158,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
               if (event.memories.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 const Text(
-                  'Memories',
+                  'Additional info',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 8),

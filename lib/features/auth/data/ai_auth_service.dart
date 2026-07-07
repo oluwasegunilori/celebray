@@ -1,5 +1,5 @@
 import 'package:celebray/features/auth/data/auth_service.dart';
-import 'package:celebray/features/auth/domain/ai_auth_session.dart';
+import 'package:celebray/features/auth/domain/ai_auth_session_result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AiAuthService {
@@ -7,7 +7,7 @@ class AiAuthService {
 
   static final AuthService _authService = AuthService();
 
-  static Future<AiAuthSession?> ensureSession() async {
+  static Future<AiAuthSessionResult> ensureSession() async {
     return _authService.ensureAiSession();
   }
 
