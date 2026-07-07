@@ -6,21 +6,50 @@ part of 'event_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$eventNotifierHash() => r'02fdace0a077d255a28bf2b61b7d9fc007d133f2';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [EventNotifier].
 @ProviderFor(EventNotifier)
-final eventNotifierProvider =
-    AutoDisposeStreamNotifierProvider<EventNotifier, List<EventModel>>.internal(
-  EventNotifier.new,
-  name: r'eventNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$eventNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final eventProvider = EventNotifierProvider._();
 
-typedef _$EventNotifier = AutoDisposeStreamNotifier<List<EventModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class EventNotifierProvider
+    extends $StreamNotifierProvider<EventNotifier, List<EventModel>> {
+  EventNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'eventProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventNotifierHash();
+
+  @$internal
+  @override
+  EventNotifier create() => EventNotifier();
+}
+
+String _$eventNotifierHash() => r'd1792adaadcbc7a097b5f7aadafd5cafef266885';
+
+abstract class _$EventNotifier extends $StreamNotifier<List<EventModel>> {
+  Stream<List<EventModel>> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref as $Ref<AsyncValue<List<EventModel>>, List<EventModel>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<EventModel>>, List<EventModel>>,
+              AsyncValue<List<EventModel>>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

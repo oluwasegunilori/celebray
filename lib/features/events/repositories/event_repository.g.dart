@@ -6,22 +6,47 @@ part of 'event_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$eventRepositoryHash() => r'44c1bedafc4cd3d81d879e4549117d2bb036766a';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [eventRepository].
 @ProviderFor(eventRepository)
-final eventRepositoryProvider = AutoDisposeProvider<EventRepository>.internal(
-  eventRepository,
-  name: r'eventRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$eventRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final eventRepositoryProvider = EventRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef EventRepositoryRef = AutoDisposeProviderRef<EventRepository>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class EventRepositoryProvider
+    extends
+        $FunctionalProvider<EventRepository, EventRepository, EventRepository>
+    with $Provider<EventRepository> {
+  EventRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'eventRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<EventRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  EventRepository create(Ref ref) {
+    return eventRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EventRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EventRepository>(value),
+    );
+  }
+}
+
+String _$eventRepositoryHash() => r'44c1bedafc4cd3d81d879e4549117d2bb036766a';

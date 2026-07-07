@@ -1,0 +1,7 @@
+# Copy this file to key.properties and fill in your release keystore details.
+# NEVER commit key.properties or your .jks file to version control.
+#
+# storePassword=your_store_password
+# keyPassword=your_key_password
+# keyAlias=upload
+# storeFile=/path/to/upload-keystore.jks

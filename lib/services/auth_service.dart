@@ -8,11 +8,23 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
+  User? get currentUser => _auth.currentUser;
+
+  Future<AppUser?> restoreSession() async {
+    final storedUser = await UserStorageService.loadUser();
+    if (_auth.currentUser != null) return storedUser;
+
+    if (storedUser != null) {
+      await UserStorageService.clearUser();
+    }
+    return null;
+  }
+
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn
-          .authenticate();
-      if (googleUser == null) return null; // User canceled
+      final GoogleSignInAccount? googleUser =
+          await _googleSignIn.authenticate();
+      if (googleUser == null) return null;
 
       final googleAuth = googleUser.authentication;
 
@@ -27,16 +39,14 @@ class AuthService {
         photoUrl: googleUser.photoUrl,
       );
 
-      UserStorageService.saveUser(appUser);
+      await UserStorageService.saveUser(appUser);
 
       return await _auth.signInWithCredential(oauthCredential);
-    } catch (e) {
-      print('Google sign-in error: $e');
+    } catch (_) {
       return null;
     }
   }
 
-  // Apple sign-in
   Future<UserCredential?> signInWithApple() async {
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [
@@ -45,7 +55,7 @@ class AuthService {
       ],
     );
 
-    final oauthCredential = OAuthProvider("apple.com").credential(
+    final oauthCredential = OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
       accessToken: appleCredential.authorizationCode,
     );
@@ -54,15 +64,19 @@ class AuthService {
       uid: appleCredential.userIdentifier,
       name: appleCredential.givenName ?? '',
       email: appleCredential.email,
-      photoUrl: null, // Apple sign-in does not provide a photo URL
+      photoUrl: null,
     );
 
-    UserStorageService.saveUser(appUser);
+    await UserStorageService.saveUser(appUser);
 
     return await _auth.signInWithCredential(oauthCredential);
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await Future.wait([
+      _auth.signOut(),
+      _googleSignIn.signOut(),
+    ]);
+    await UserStorageService.clearUser();
   }
 }

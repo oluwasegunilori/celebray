@@ -1,13 +1,6 @@
 import 'package:celebray/features/reminders/domain/event_model.dart';
-import 'package:celebray/utils/db_converters.dart';
-import 'package:equatable/equatable.dart';
-import 'package:floor/floor.dart';
 
-
-@Entity(tableName: 'events')
-@TypeConverters([DateTimeConverter, StringListConverter])
 class EventEntity {
-  @PrimaryKey()
   final String id;
   final String name;
   final String type;
@@ -32,7 +25,6 @@ class EventEntity {
     this.generatedMessage,
   });
 
-  // Mapper: DB → Domain
   EventModel toDomain() => EventModel(
         id: id,
         name: name,
@@ -46,7 +38,6 @@ class EventEntity {
         generatedMessage: generatedMessage,
       );
 
-  // Mapper: Domain → DB
   factory EventEntity.fromDomain(EventModel event) => EventEntity(
         id: event.id,
         name: event.name,

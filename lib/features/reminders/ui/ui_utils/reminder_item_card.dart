@@ -1,10 +1,14 @@
 import 'dart:io';
 
+import 'package:celebray/app_theme.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
 import 'package:celebray/utils/date_format.dart';
 import 'package:flutter/material.dart';
 
-Widget reminderItem({required EventModel event, required Function(EventAction) onPressed}) {
+Widget reminderItem({
+  required EventModel event,
+  required Function(EventAction) onPressed,
+}) {
   return Card(
     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -22,8 +26,8 @@ Widget reminderItem({required EventModel event, required Function(EventAction) o
               ),
             )
           : CircleAvatar(
-              backgroundColor: Colors.blue.shade100,
-              child: const Icon(Icons.event, color: Colors.blueAccent),
+              backgroundColor: AppTheme.primaryLight,
+              child: const Icon(Icons.event, color: AppTheme.primary),
             ),
       title: Text(
         event.name,
@@ -34,18 +38,18 @@ Widget reminderItem({required EventModel event, required Function(EventAction) o
         children: [
           const SizedBox(height: 4),
           Text(
-            "${event.type} • ${dateFormatterDay.format(event.date)}",
+            '${event.type} • ${dateFormatterDay.format(event.date)}',
             style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
           ),
           Text(
-            "Relationship: ${event.relationship}",
+            'Relationship: ${event.relationship}',
             style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
           if (event.memories.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                "“${event.memories.fold('', (initialValue, combine) => "$initialValue \n $combine")}”",
+                '"${event.memories.first}"',
                 style: TextStyle(
                   fontStyle: FontStyle.italic,
                   color: Colors.grey.shade800,
@@ -59,37 +63,25 @@ Widget reminderItem({required EventModel event, required Function(EventAction) o
       ),
       trailing: PopupMenuButton<EventAction>(
         icon: const Icon(Icons.more_vert, color: Colors.grey),
-        onSelected: (action) {
-          // Handle actions here
-          switch (action) {
-            case ViewEvent(:var eventId):
-              onPressed(ViewEvent(eventId));
-            case EditEvent(:var eventId):
-              onPressed(EditEvent(eventId));
-            case DeleteEvent(:var eventId):
-              onPressed(DeleteEvent(eventId));
-            case ShareEvent(:var eventId):
-              onPressed(ShareEvent(eventId));
-            case GenerateMessage(:var eventId):
-              onPressed(GenerateMessage(eventId));
-          }
-        },
+        onSelected: onPressed,
         itemBuilder: (context) => [
-          PopupMenuItem(value: ViewEvent(event.id), child: const Text("View")),
-          PopupMenuItem(value: EditEvent(event.id), child: const Text("Edit")),
+          PopupMenuItem(value: ViewEvent(event.id), child: const Text('View')),
+          PopupMenuItem(value: EditEvent(event), child: const Text('Edit')),
           PopupMenuItem(
             value: DeleteEvent(event.id),
-            child: const Text("Delete"),
+            child: const Text('Delete'),
           ),
           PopupMenuItem(
             value: ShareEvent(event.id),
-            child: const Text("Share"),
+            child: const Text('Share'),
+          ),
+          PopupMenuItem(
+            value: GenerateMessage(event.id),
+            child: const Text('Generate Message'),
           ),
         ],
       ),
-      onTap: () {
-        // Maybe navigate to Event details page
-      },
+      onTap: () => onPressed(ViewEvent(event.id)),
     ),
   );
 }
@@ -104,8 +96,8 @@ class ViewEvent extends EventAction {
 }
 
 class EditEvent extends EventAction {
-  final String eventId;
-  const EditEvent(this.eventId);
+  final EventModel event;
+  const EditEvent(this.event);
 }
 
 class DeleteEvent extends EventAction {

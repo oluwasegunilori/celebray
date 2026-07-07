@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:celebray/app_theme.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/reminders/domain/event_model.dart';
 import 'package:celebray/features/reminders/ui/ui_utils/custom_designs.dart';
@@ -5,9 +8,13 @@ import 'package:celebray/utils/date_format.dart';
 import 'package:celebray/utils/unique_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
+//Updates and adds new events
 class AddEventScreen extends ConsumerStatefulWidget {
-  const AddEventScreen({super.key});
+  const AddEventScreen({super.key, this.event});
+
+  final EventModel? event;
 
   @override
   ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
@@ -15,11 +22,11 @@ class AddEventScreen extends ConsumerStatefulWidget {
 
 class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   final _formKey = GlobalKey<FormState>();
-  String name = '';
-  String selectedType = 'Birthday';
-  String selectedRelationship = 'Friend';
-  String selectedSex = 'Male';
-  DateTime date = DateTime.now();
+  late String name;
+  late String selectedType;
+  late String selectedRelationship;
+  late String selectedSex;
+  late DateTime date;
   String? memory;
 
   final List<String> eventTypes = [
@@ -56,14 +63,50 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   double closeness = 5;
 
   List<String> memories = [];
+  String? imagePath;
 
-  final TextEditingController eventNameController = TextEditingController();
-  final TextEditingController memoriesController = TextEditingController();
-  final TextEditingController eventDateController = TextEditingController();
+  final _imagePicker = ImagePicker();
+
+  late TextEditingController eventNameController;
+  late TextEditingController eventDateController;
+  TextEditingController memoriesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    eventNameController = TextEditingController(text: widget.event?.name ?? '');
+    eventDateController = TextEditingController(
+      text: widget.event != null
+          ? dateFormatterDay.format(widget.event!.date)
+          : '',
+    );
+    memories = widget.event?.memories ?? [];
+    selectedType = widget.event?.type ?? eventTypes[0];
+    selectedRelationship = widget.event?.relationship ?? relationships[0];
+    name = widget.event?.name ?? '';
+    date = widget.event?.date ?? DateTime.now();
+    selectedSex = widget.event?.sex ?? sexs[0];
+    closeness = widget.event?.closeness.toDouble() ?? 5;
+    imagePath = widget.event?.imagePath;
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (picked != null) {
+      setState(() => imagePath = picked.path);
+    }
+  }
+
+  void _removeImage() => setState(() => imagePath = null);
 
   @override
   Widget build(BuildContext context) {
-    final eventNotifier = ref.read(eventNotifierProvider.notifier);
+    final eventNotifier = ref.read(eventProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -92,7 +135,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       final pickedDate = await showDatePicker(
                         context: context,
                         initialDate: date,
-                        firstDate: DateTime.now(),
+                        firstDate: DateTime(1900),
                         lastDate: DateTime(2100),
                       );
 
@@ -123,18 +166,70 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       }
                     },
 
-                    hoverColor: Colors.blueAccent.withOpacity(0.3),
-                    highlightColor: Colors.blueAccent.withOpacity(0.3),
+                    hoverColor: AppTheme.primary.withValues(alpha: 0.3),
+                    highlightColor: AppTheme.primary.withValues(alpha: 0.3),
                     child: _buildTextField(
                       label: 'Select the Event Date',
                       controller: eventDateController,
                       icon: Icons.edit_calendar,
-                      onSaved: (v) => date = dateFormatterDay.parse(v ?? ''),
+                      onSaved: (v) => {},
                       validator: (v) => v == null || v.isEmpty
                           ? 'Please Select a date'
                           : null,
                       editable: false,
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('Photo (optional)'),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (imagePath != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(imagePath!),
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryLight,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.person, color: AppTheme.primary),
+                        ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _pickImage(ImageSource.gallery),
+                              icon: const Icon(Icons.photo_library, size: 18),
+                              label: const Text('Gallery'),
+                            ),
+                            const SizedBox(height: 6),
+                            OutlinedButton.icon(
+                              onPressed: () => _pickImage(ImageSource.camera),
+                              icon: const Icon(Icons.camera_alt, size: 18),
+                              label: const Text('Camera'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (imagePath != null)
+                        IconButton(
+                          onPressed: _removeImage,
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          tooltip: 'Remove photo',
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   CustomExpansionTile(
@@ -194,14 +289,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       Expanded(
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: Colors.blueAccent,
-                            inactiveTrackColor: Colors.blueAccent.withOpacity(
-                              0.3,
-                            ),
+                            activeTrackColor: AppTheme.primary,
+                            inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.3),
                             trackHeight: 6.0,
-                            thumbColor: Colors.blue,
-                            overlayColor: Colors.blue.withOpacity(0.2),
-                            valueIndicatorColor: Colors.blueAccent,
+                            thumbColor: AppTheme.primaryDark,
+                            overlayColor: AppTheme.primary.withValues(alpha: 0.2),
+                            valueIndicatorColor: AppTheme.primary,
                             thumbShape: const RoundSliderThumbShape(
                               enabledThumbRadius: 12,
                             ),
@@ -300,15 +393,15 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Save Event',
+              child: Text(
+                widget.event != null ? 'Update Event' : 'Save Event',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
                   final event = EventModel(
-                    id: uniqueId(),
+                    id: widget.event?.id ?? uniqueId(),
                     name: name,
                     type: selectedType,
                     date: date,
@@ -316,8 +409,14 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     memories: memories,
                     sex: selectedSex,
                     closeness: closeness.round(),
+                    imagePath: imagePath,
+                    generatedMessage: widget.event?.generatedMessage,
                   );
-                  eventNotifier.addEvent(event);
+                  if (widget.event != null) {
+                    eventNotifier.updateEvent(event);
+                  } else {
+                    eventNotifier.addEvent(event);
+                  }
                   Navigator.pop(context);
                 }
               },
@@ -356,16 +455,16 @@ Widget _buildTextField({
       labelText: optional ? '$label (optional)' : label,
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
-      prefixIcon: icon != null ? Icon(icon, color: Colors.blueAccent) : null,
+      prefixIcon: icon != null ? Icon(icon, color: AppTheme.primary) : null,
       filled: true,
-      fillColor: Colors.blue.shade50,
+      fillColor: AppTheme.primaryLight,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       enabled: editable,
@@ -395,7 +494,7 @@ class _SelectableChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blueAccent : Colors.grey.shade200,
+          color: isSelected ? AppTheme.primary : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(

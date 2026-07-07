@@ -75,9 +75,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   TextButton(
                     onPressed: () async {
-                      Navigator.of(context).pushReplacementNamed('/sign-in');
+                      await _saveOnboardingPreference();
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacementNamed('/sign-in');
+                      }
                     },
-                    child: Text("Skip"),
+                    child: const Text('Skip'),
                   ),
                   Row(
                     children: List.generate(

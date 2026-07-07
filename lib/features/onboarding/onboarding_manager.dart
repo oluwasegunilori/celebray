@@ -1,29 +1,58 @@
+import 'package:celebray/features/home/home_screen.dart';
+import 'package:celebray/features/onboarding/onboarding_screen.dart';
+import 'package:celebray/models/app_user.dart';
+import 'package:celebray/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../home/home_screen.dart';
-import 'onboarding_screen.dart';
 
-class OnboardingManager extends StatelessWidget {
+class OnboardingManager extends StatefulWidget {
   const OnboardingManager({super.key});
 
-  Future<bool> _isUserOnboarded() async {
+  @override
+  State<OnboardingManager> createState() => _OnboardingManagerState();
+}
+
+class _OnboardingManagerState extends State<OnboardingManager> {
+  late final Future<_StartupState> _startupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _startupFuture = _loadStartupState();
+  }
+
+  Future<_StartupState> _loadStartupState() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isOnboarded') ?? false;
+    final isOnboarded = prefs.getBool('isOnboarded') ?? false;
+    final user = await AuthService().restoreSession();
+    return _StartupState(isOnboarded: isOnboarded, user: user);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _isUserOnboarded(),
+    return FutureBuilder<_StartupState>(
+      future: _startupFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasData && snapshot.data == true) {
-          return const HomeScreen();
-        } else {
-          return const OnboardingScreen();
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
+
+        final state = snapshot.data;
+        if (state?.isOnboarded == true) {
+          return const HomeScreen();
+        }
+
+        return const OnboardingScreen();
       },
     );
   }
+}
+
+class _StartupState {
+  final bool isOnboarded;
+  final AppUser? user;
+
+  const _StartupState({required this.isOnboarded, this.user});
 }

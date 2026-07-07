@@ -1,51 +1,46 @@
-# 🎉 Celebray
+# Celebray
 
-**Celebray** is a Flutter-based app that helps you remember and celebrate important dates — birthdays, anniversaries, graduations, and more — with AI-generated, personalized messages and beautiful shareable cards.
+**Celebray** helps you remember and celebrate important dates — birthdays, anniversaries, graduations, and more — with smart reminders, personalized messages, and shareable greeting cards.
 
----
+## Features
 
-## ✨ Features
+- Reminders list with rich event profiles (relationship, closeness, memories)
+- Calendar view of upcoming celebrations
+- Local notifications (7-day advance + day-of)
+- AI-style message generator (warm, funny, formal tones)
+- Shareable greeting cards as PNG
+- Optional Google / Apple sign-in
+- Photo attachments for events
 
-- 🗓 Smart calendar to manage birthdays and anniversaries  
-- 🤖 AI-powered message generator based on relationship and tone  
-- 🎨 Shareable greeting cards with custom backgrounds  
-- 🔔 Local notifications for upcoming events  
-- 💡 Clean, intuitive onboarding experience  
+## Tech Stack
 
----
+- Flutter + Material 3
+- Riverpod for state management
+- sqflite for local storage
+- Firebase Auth + Crashlytics
+- flutter_local_notifications
+- table_calendar, share_plus, image_picker
 
-## 🛠 Tech Stack
-
-- **Flutter** (cross-platform mobile/web)  
-- **Bloc** (planned) for state management  
-- **OpenAI API** (planned) for smart message generation  
-- **Hive / SharedPreferences** for local storage  
-- **Flutter Local Notifications** for reminders  
-- **Screenshot + Share Plus** for sharing cards
-
----
-
-## 🚧 Current Progress
-
-- [x] Project structure setup  
-- [x] Onboarding screens  
-- [x] Bottom navigation scaffold  
-- [ ] Calendar integration  
-- [ ] AI message builder  
-- [ ] Shareable card generation  
-- [ ] Local reminder system  
-
----
-
-## 📸 Screenshots (Coming Soon)
-Will include onboarding, calendar, and message generation UI.
-
----
-
-## 🔧 Getting Started
+## Getting Started
 
 ```bash
-git clone https://github.com/yourusername/celebray.git
+git clone <your-repo-url>
 cd celebray
 flutter pub get
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
 flutter run
+```
+
+## Store Release Checklist
+
+1. Create Android upload keystore and `android/key.properties` (see `key.properties.example`)
+2. Run `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`
+3. Host `docs/privacy_policy.md` and update URLs in `lib/constants/app_constants.dart`
+4. Add App Store / Play Store screenshots
+5. Run `flutter analyze` and `flutter test` before submitting
+
+## Legal
+
+- [Privacy Policy](docs/privacy_policy.md)
+- [Terms of Service](docs/terms_of_service.md)

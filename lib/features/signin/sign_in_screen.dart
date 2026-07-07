@@ -23,6 +23,10 @@ class _SignInScreenState extends State<SignInScreen> {
     if (userCred != null) {
       await _saveOnboardingPreference();
       widget.onSignedIn();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in was cancelled or failed')),
+      );
     }
   }
 
@@ -34,14 +38,18 @@ class _SignInScreenState extends State<SignInScreen> {
         await _saveOnboardingPreference();
         widget.onSignedIn();
       }
-    } catch (e) {
-      // Handle user cancel or failure
-      print("Sign in with Apple failed: $e");
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in with Apple was cancelled or failed')),
+        );
+      }
     }
     setState(() => _loading = false);
   }
 
-  void _skipSignIn() {
+  void _skipSignIn() async {
+    await _saveOnboardingPreference();
     widget.onSignedIn();
   }
 

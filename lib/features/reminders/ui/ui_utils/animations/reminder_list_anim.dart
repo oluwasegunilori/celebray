@@ -25,8 +25,9 @@ class _ReminderListState extends State<ReminderList> {
   @override
   void didUpdateWidget(covariant ReminderList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update local list if the Riverpod stream changes
-    _events = List.from(widget.events);
+    if (widget.events != oldWidget.events) {
+      _events = List.from(widget.events);
+    }
   }
 
   void _hideEvent(int index) {
@@ -71,7 +72,7 @@ class _ReminderListState extends State<ReminderList> {
                               // Optional: clear hidden in Riverpod
                             },
                           ),
-                          duration: const Duration(seconds: 3),
+                          duration: const Duration(seconds: 2),
                         ),
                       )
                       .closed
