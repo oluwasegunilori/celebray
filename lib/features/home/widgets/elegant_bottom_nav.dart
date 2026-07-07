@@ -92,7 +92,8 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+        child: InkWell(
+        key: ValueKey('bottom_nav_${tab.label.toLowerCase()}'),
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
         splashColor: AppTheme.accent.withValues(alpha: 0.12),

@@ -7,7 +7,9 @@ import 'package:celebray/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 class CelebrayApp extends StatelessWidget {
-  const CelebrayApp({super.key});
+  final Widget? initialHome;
+
+  const CelebrayApp({super.key, this.initialHome});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +17,7 @@ class CelebrayApp extends StatelessWidget {
       title: 'Celebray',
       theme: AppTheme.light,
       navigatorKey: NotificationNavigationHandler.navigatorKey,
-      home: const OnboardingGate(),
+      home: initialHome ?? const OnboardingGate(),
       routes: {
         '/home': (context) => const HomeScreen(),
         '/settings': (context) => const SettingsScreen(),

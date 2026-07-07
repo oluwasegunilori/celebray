@@ -1,0 +1,5 @@
+app_identifier("com.shegz.celebray")
+team_id("PJUFCZT7ZL")
+
+# Optional — Fastlane falls back to App Store Connect API key env vars.
+apple_id(ENV["APPLE_ID"]) if ENV["APPLE_ID"]

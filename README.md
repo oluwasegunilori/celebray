@@ -53,6 +53,32 @@ Use these when submitting to the App Store and Google Play:
 
 Deploy with `firebase deploy --only hosting`.
 
+## TestFlight (Fastlane)
+
+Prerequisites: Apple Developer Program, Xcode signing for `com.shegz.celebray`, and an app record in App Store Connect.
+
+```bash
+# One-time setup
+cd ios
+bundle install
+cp fastlane/.env.example fastlane/.env
+# Edit fastlane/.env with App Store Connect API key (recommended)
+
+# Load env + build + upload
+set -a && source fastlane/.env && set +a
+bundle exec fastlane beta
+
+# Build IPA only
+bundle exec fastlane build
+
+# Upload an existing IPA (after flutter build ipa)
+bundle exec fastlane upload
+```
+
+Bump `version: x.y.z+build` in `pubspec.yaml` before each upload (build number must increase).
+
+Create an API key at [App Store Connect → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api). Grant **Developer** or **App Manager** role.
+
 ## Legal
 
 Source documents (also published at the URLs above):
