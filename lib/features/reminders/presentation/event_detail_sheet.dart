@@ -1,4 +1,7 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/tutorial/event_detail_tutorial_steps.dart';
+import 'package:celebray/core/tutorial/feature_tutorial_overlay.dart';
+import 'package:celebray/core/tutorial/tutorial_storage.dart';
 import 'package:celebray/features/events/domain/event_actions.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/events/presentation/event_display_labels.dart';
@@ -46,15 +49,53 @@ class EventDetailSheet extends ConsumerStatefulWidget {
 }
 
 class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
+  bool _showTutorial = false;
+  int _tutorialStep = 0;
+
+  final _editKey = GlobalKey();
+  final _shareKey = GlobalKey();
+  final _generateKey = GlobalKey();
+
+  late final List<TutorialStep> _tutorialSteps = buildEventDetailTutorialSteps(
+    editKey: _editKey,
+    generateKey: _generateKey,
+    shareKey: widget.event.hasGeneratedMessage ? _shareKey : null,
+    hasMessage: widget.event.hasGeneratedMessage,
+  );
+
   @override
   void initState() {
     super.initState();
-    if (!widget.openShareOnOpen) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      ShareEventSheet.show(context, event: widget.event);
+
+      if (widget.openShareOnOpen) {
+        ShareEventSheet.show(context, event: widget.event);
+        return;
+      }
+
+      await _maybeStartTutorial();
     });
+  }
+
+  Future<void> _maybeStartTutorial() async {
+    if (await TutorialStorage.hasSeenEventDetailTutorial()) return;
+    if (!mounted) return;
+    setState(() => _showTutorial = true);
+  }
+
+  Future<void> _finishTutorial() async {
+    await TutorialStorage.markEventDetailTutorialSeen();
+    if (!mounted) return;
+    setState(() => _showTutorial = false);
+  }
+
+  void _advanceTutorial() {
+    if (_tutorialStep >= _tutorialSteps.length - 1) {
+      _finishTutorial();
+      return;
+    }
+    setState(() => _tutorialStep += 1);
   }
 
   EventModel get event => widget.event;
@@ -73,7 +114,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
                 : 'In $daysUntil days')
         : null;
 
-    final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+    final hasMessage = event.hasGeneratedMessage;
     final displayTitle = EventDisplayLabels.from(event).title;
 
     return DraggableScrollableSheet(
@@ -82,153 +123,178 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.9,
       builder: (context, scrollController) {
-        return SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
+        return Stack(
+          children: [
+            SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(24),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  EventAvatar(
-                    imagePath: event.imagePath,
-                    size: 56,
-                    borderRadius: 28,
-                    fallbackIcon: EventAvatar.iconForEventType(event.type),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayTitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  const SizedBox(height: 20),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      EventAvatar(
+                        imagePath: event.imagePath,
+                        size: 56,
+                        borderRadius: 28,
+                        fallbackIcon: EventAvatar.iconForEventType(event.type),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayTitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              event.type,
+                              style: const TextStyle(
+                                color: AppTheme.accent,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          event.type,
-                          style: const TextStyle(
-                            color: AppTheme.accent,
-                            fontWeight: FontWeight.w600,
+                      ),
+                      if (badge != null)
+                        Chip(
+                          label: Text(badge),
+                          backgroundColor: AppTheme.primaryLight,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _DetailRow(
+                    icon: Icons.calendar_today,
+                    label: 'Date',
+                    value: actualDate,
+                  ),
+                  _DetailRow(
+                    icon: Icons.people,
+                    label: 'Relationship',
+                    value: event.relationship,
+                  ),
+                  _DetailRow(
+                    icon: Icons.favorite,
+                    label: 'Closeness',
+                    value: '${event.closeness}/10',
+                  ),
+                  if (event.memories.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Additional info',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: event.memories
+                          .map((m) => Chip(label: Text(m)))
+                          .toList(),
+                    ),
+                  ],
+                  if (event.generatedMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '"${event.generatedMessage}"',
+                        style: const TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: _editKey,
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onAction(EditEvent(event));
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Edit'),
+                        ),
+                      ),
+                      if (hasMessage) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: _shareKey,
+                            onPressed: () {
+                              ShareEventSheet.show(context, event: event);
+                            },
+                            icon: const Icon(Icons.share),
+                            label: const Text('Share'),
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (badge != null)
-                    Chip(
-                      label: Text(badge),
-                      backgroundColor: AppTheme.primaryLight,
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _DetailRow(
-                icon: Icons.calendar_today,
-                label: 'Date',
-                value: actualDate,
-              ),
-              _DetailRow(
-                icon: Icons.people,
-                label: 'Relationship',
-                value: event.relationship,
-              ),
-              _DetailRow(
-                icon: Icons.favorite,
-                label: 'Closeness',
-                value: '${event.closeness}/10',
-              ),
-              if (event.memories.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'Additional info',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: event.memories
-                      .map((m) => Chip(label: Text(m)))
-                      .toList(),
-                ),
-              ],
-              if (event.generatedMessage != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '"${event.generatedMessage}"',
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      key: _generateKey,
                       onPressed: () {
                         Navigator.pop(context);
-                        onAction(EditEvent(event));
+                        onAction(GenerateMessage(event.id));
                       },
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Edit'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ShareEventSheet.show(context, event: event);
-                      },
-                      icon: const Icon(Icons.share),
-                      label: const Text('Share'),
+                      icon: Icon(
+                        hasMessage ? Icons.edit_note : Icons.auto_awesome,
+                      ),
+                      label: Text(
+                        hasMessage ? 'Edit Message' : 'Generate Message',
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onAction(GenerateMessage(event.id));
-                  },
-                  icon: Icon(hasMessage ? Icons.edit_note : Icons.auto_awesome),
-                  label: Text(hasMessage ? 'Edit Message' : 'Generate Message'),
+            ),
+            if (_showTutorial)
+              Positioned.fill(
+                child: FeatureTutorialOverlay(
+                  steps: _tutorialSteps,
+                  stepIndex: _tutorialStep,
+                  onNext: _advanceTutorial,
+                  onSkip: _finishTutorial,
                 ),
               ),
-            ],
-          ),
+          ],
         );
       },
     );

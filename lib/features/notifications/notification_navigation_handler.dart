@@ -70,11 +70,19 @@ class NotificationNavigationHandler {
     required bool openShare,
   }) async {
     if (openShare) {
-      ShareEventSheet.show(context, event: event);
+      if (event.hasGeneratedMessage) {
+        ShareEventSheet.show(context, event: event);
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GeneratorScreen(initialEvent: event),
+          ),
+        );
+      }
       return;
     }
 
-    final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+    final hasMessage = event.hasGeneratedMessage;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => hasMessage

@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 enum _ToolbarMenuAction { importCalendar }
 
 class HomeToolbarActions extends StatelessWidget {
-  const HomeToolbarActions({super.key});
+  final GlobalKey? settingsKey;
+
+  const HomeToolbarActions({super.key, this.settingsKey});
 
   static Future<void> openCalendarImport(BuildContext context) async {
     final draft = await CalendarImportSheet.show(context);
@@ -21,6 +23,7 @@ class HomeToolbarActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
+          key: settingsKey,
           icon: const Icon(Icons.settings),
           onPressed: () => Navigator.pushNamed(context, '/settings'),
         ),

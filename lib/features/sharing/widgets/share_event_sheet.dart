@@ -1,4 +1,7 @@
 import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/tutorial/feature_tutorial_overlay.dart';
+import 'package:celebray/core/tutorial/share_tutorial_steps.dart';
+import 'package:celebray/core/tutorial/tutorial_storage.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/messages/message_generator_service.dart';
 import 'package:celebray/features/sharing/share_service.dart';
@@ -33,11 +36,50 @@ class _ShareEventSheetState extends State<ShareEventSheet> {
   int _colorIndex = 0;
   int _typographyIndex = 0;
   CardTextAlignment _alignment = CardStyles.defaultAlignment;
+  bool _showTutorial = false;
+  int _tutorialStep = 0;
   final _cardKey = GlobalKey();
+  final _colorKey = GlobalKey();
+  final _typographyKey = GlobalKey();
+  final _previewKey = GlobalKey();
+  final _shareActionsKey = GlobalKey();
+
+  late final List<TutorialStep> _tutorialSteps = buildShareTutorialSteps(
+    colorKey: _colorKey,
+    typographyKey: _typographyKey,
+    previewKey: _previewKey,
+    shareActionsKey: _shareActionsKey,
+  );
 
   EventModel get event => widget.event;
 
   String get _message => MessageGeneratorService.shareMessageFor(event);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeStartTutorial());
+  }
+
+  Future<void> _maybeStartTutorial() async {
+    if (await TutorialStorage.hasSeenShareTutorial()) return;
+    if (!mounted) return;
+    setState(() => _showTutorial = true);
+  }
+
+  Future<void> _finishTutorial() async {
+    await TutorialStorage.markShareTutorialSeen();
+    if (!mounted) return;
+    setState(() => _showTutorial = false);
+  }
+
+  void _advanceTutorial() {
+    if (_tutorialStep >= _tutorialSteps.length - 1) {
+      _finishTutorial();
+      return;
+    }
+    setState(() => _tutorialStep += 1);
+  }
 
   Future<void> _shareCard(BuildContext shareContext) async {
     await ShareService.shareGreetingCard(
@@ -65,124 +107,177 @@ class _ShareEventSheetState extends State<ShareEventSheet> {
         minChildSize: 0.5,
         maxChildSize: 0.92,
         builder: (context, scrollController) {
-          return SingleChildScrollView(
-            controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Share ${event.name.isNotEmpty ? event.name : event.type}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Pick a color and text style, then share.',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Color',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 10),
-                CardColorPicker(
-                  selectedIndex: _colorIndex,
-                  onSelected: (index) => setState(() => _colorIndex = index),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Text style',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 10),
-                CardTypographyPicker(
-                  selectedIndex: _typographyIndex,
-                  onSelected: (index) =>
-                      setState(() => _typographyIndex = index),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Alignment',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 10),
-                CardAlignmentPicker(
-                  selected: _alignment,
-                  onSelected: (alignment) =>
-                      setState(() => _alignment = alignment),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Preview',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.sizeOf(context).height * 0.38,
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: GreetingCardPreview(
-                        cardKey: _cardKey,
-                        message: _message,
-                        colorIndex: _colorIndex,
-                        typographyIndex: _typographyIndex,
-                        alignment: _alignment,
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Share ${event.name.isNotEmpty ? event.name : event.type}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Pick a color and text style, then share.',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 20),
+                    KeyedSubtree(
+                      key: _colorKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Color',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          CardColorPicker(
+                            selectedIndex: _colorIndex,
+                            onSelected: (index) =>
+                                setState(() => _colorIndex = index),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    KeyedSubtree(
+                      key: _typographyKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Text style',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          CardTypographyPicker(
+                            selectedIndex: _typographyIndex,
+                            onSelected: (index) =>
+                                setState(() => _typographyIndex = index),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Alignment',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    CardAlignmentPicker(
+                      selected: _alignment,
+                      onSelected: (alignment) =>
+                          setState(() => _alignment = alignment),
+                    ),
+                    const SizedBox(height: 20),
+                    KeyedSubtree(
+                      key: _previewKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Preview',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.sizeOf(context).height * 0.38,
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: GreetingCardPreview(
+                                  cardKey: _cardKey,
+                                  message: _message,
+                                  colorIndex: _colorIndex,
+                                  typographyIndex: _typographyIndex,
+                                  alignment: _alignment,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    KeyedSubtree(
+                      key: _shareActionsKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Builder(
+                            builder: (shareContext) => ElevatedButton.icon(
+                              onPressed: () => _shareCard(shareContext),
+                              icon: const Icon(Icons.image),
+                              label: const Text('Share Card'),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Builder(
+                            builder: (shareContext) => OutlinedButton.icon(
+                              onPressed: () => _shareText(shareContext),
+                              icon: const Icon(Icons.text_snippet_outlined),
+                              label: const Text('Share as Text'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!event.hasGeneratedMessage) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Using a suggested message. Save a custom one from Generate Message.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (_showTutorial)
+                Positioned.fill(
+                  child: FeatureTutorialOverlay(
+                    steps: _tutorialSteps,
+                    stepIndex: _tutorialStep,
+                    onNext: _advanceTutorial,
+                    onSkip: _finishTutorial,
                   ),
                 ),
-                const SizedBox(height: 24),
-                Builder(
-                  builder: (shareContext) => SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _shareCard(shareContext),
-                      icon: const Icon(Icons.image),
-                      label: const Text('Share Card'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Builder(
-                  builder: (shareContext) => SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _shareText(shareContext),
-                      icon: const Icon(Icons.text_snippet_outlined),
-                      label: const Text('Share as Text'),
-                    ),
-                  ),
-                ),
-                if (event.generatedMessage == null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Using a suggested message. Save a custom one from Generate Message.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+            ],
           );
         },
       ),

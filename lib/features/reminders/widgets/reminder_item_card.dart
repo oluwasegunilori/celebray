@@ -46,16 +46,15 @@ class ReminderItemCard extends StatelessWidget {
             value: DeleteEvent(event.id),
             child: const Text('Delete'),
           ),
-          PopupMenuItem(
-            value: ShareEvent(event.id),
-            child: const Text('Share'),
-          ),
+          if (event.hasGeneratedMessage)
+            PopupMenuItem(
+              value: ShareEvent(event.id),
+              child: const Text('Share'),
+            ),
           PopupMenuItem(
             value: GenerateMessage(event.id),
             child: Text(
-              event.generatedMessage?.trim().isNotEmpty ?? false
-                  ? 'Edit Message'
-                  : 'Generate Message',
+              event.hasGeneratedMessage ? 'Edit Message' : 'Generate Message',
             ),
           ),
         ],
