@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 class ElegantBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final GlobalKey? calendarTabKey;
+  final GlobalKey? generateTabKey;
 
   const ElegantBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.calendarTabKey,
+    this.generateTabKey,
   });
 
   static const _tabs = [
@@ -52,11 +56,19 @@ class ElegantBottomNav extends StatelessWidget {
       ),
       child: Row(
         children: List.generate(_tabs.length, (index) {
+          GlobalKey? tabKey;
+          if (index == 1) {
+            tabKey = calendarTabKey;
+          } else if (index == 2) {
+            tabKey = generateTabKey;
+          }
+
           return Expanded(
             child: _NavItem(
               tab: _tabs[index],
               isSelected: currentIndex == index,
               onTap: () => onTap(index),
+              targetKey: tabKey,
             ),
           );
         }),
@@ -81,18 +93,20 @@ class _NavItem extends StatelessWidget {
   final _NavTab tab;
   final bool isSelected;
   final VoidCallback onTap;
+  final GlobalKey? targetKey;
 
   const _NavItem({
     required this.tab,
     required this.isSelected,
     required this.onTap,
+    this.targetKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    final navItem = Material(
       color: Colors.transparent,
-        child: InkWell(
+      child: InkWell(
         key: ValueKey('bottom_nav_${tab.label.toLowerCase()}'),
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
@@ -150,5 +164,9 @@ class _NavItem extends StatelessWidget {
         ),
       ),
     );
+
+    if (targetKey == null) return navItem;
+
+    return KeyedSubtree(key: targetKey, child: navItem);
   }
 }

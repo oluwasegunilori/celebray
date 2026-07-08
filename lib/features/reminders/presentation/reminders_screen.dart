@@ -13,7 +13,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RemindersScreen extends ConsumerWidget {
-  const RemindersScreen({super.key});
+  final GlobalKey? fabKey;
+  final GlobalKey? settingsKey;
+
+  const RemindersScreen({
+    super.key,
+    this.fabKey,
+    this.settingsKey,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,7 +109,9 @@ class RemindersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reminders'),
-        actions: const [HomeToolbarActions()],
+        actions: [
+          HomeToolbarActions(settingsKey: settingsKey),
+        ],
       ),
       body: eventsAsync.when(
         data: (events) => events.isEmpty
@@ -120,6 +129,7 @@ class RemindersScreen extends ConsumerWidget {
         error: (err, _) => Center(child: Text('Error: $err')),
       ),
       floatingActionButton: FloatingActionButton(
+        key: fabKey,
         heroTag: 'reminders_fab',
         onPressed: () => openAddEventSheet(),
         child: const Icon(Icons.add),
