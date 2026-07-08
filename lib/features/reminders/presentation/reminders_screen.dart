@@ -120,6 +120,7 @@ class RemindersScreen extends ConsumerWidget {
         error: (err, _) => Center(child: Text('Error: $err')),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'reminders_fab',
         onPressed: () => openAddEventSheet(),
         child: const Icon(Icons.add),
       ),

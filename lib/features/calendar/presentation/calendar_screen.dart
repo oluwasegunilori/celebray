@@ -60,6 +60,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         actions: const [HomeToolbarActions()],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'calendar_fab',
         onPressed: _openAddEvent,
         tooltip: 'Add celebration',
         child: const Icon(Icons.add),

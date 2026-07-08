@@ -16,6 +16,7 @@ class CelebrayApp extends StatelessWidget {
     return MaterialApp(
       title: 'Celebray',
       theme: AppTheme.light,
+      debugShowCheckedModeBanner: initialHome == null,
       navigatorKey: NotificationNavigationHandler.navigatorKey,
       home: initialHome ?? const OnboardingGate(),
       routes: {

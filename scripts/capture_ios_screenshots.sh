@@ -25,23 +25,17 @@ xcrun simctl boot "$DEVICE" 2>/dev/null || true
 open -a Simulator >/dev/null 2>&1 || true
 
 echo "→ Running screenshot integration tests"
-flutter test integration_test/app_store_screenshots_test.dart -d "$DEVICE"
+flutter drive \
+  --driver=integration_test/driver.dart \
+  --target=integration_test/app_store_screenshots_test.dart \
+  -d "$DEVICE"
 
-SOURCE_DIR="$ROOT/build/integration_test_screenshots"
-if [[ ! -d "$SOURCE_DIR" ]]; then
-  echo "No screenshots found in $SOURCE_DIR"
+count="$(find "$OUTPUT_DIR" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l | tr -d ' ')"
+if [[ "$count" == "0" ]]; then
+  echo "No screenshots found in $OUTPUT_DIR"
   exit 1
 fi
 
-mkdir -p "$OUTPUT_DIR"
-
-shopt -s nullglob
-for file in "$SOURCE_DIR"/*.png "$SOURCE_DIR"/*/*.png; do
-  cp "$file" "$OUTPUT_DIR/"
-done
-shopt -u nullglob
-
-count="$(find "$OUTPUT_DIR" -maxdepth 1 -name '*.png' | wc -l | tr -d ' ')"
 echo ""
 echo "✅ Saved $count screenshot(s) to:"
 echo "   $OUTPUT_DIR"

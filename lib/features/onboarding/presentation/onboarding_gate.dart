@@ -1,3 +1,5 @@
+import 'package:celebray/core/theme/app_theme.dart';
+import 'package:celebray/core/widgets/elevated_app_icon.dart';
 import 'package:celebray/features/auth/data/auth_service.dart';
 import 'package:celebray/features/auth/domain/app_user.dart';
 import 'package:celebray/features/home/presentation/home_screen.dart';
@@ -35,7 +37,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: AppTheme.black,
+            body: Center(
+              child: ElevatedAppIcon(),
+            ),
           );
         }
 

@@ -55,6 +55,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light,
+          debugShowCheckedModeBanner: false,
           home: const OnboardingScreen(),
         ),
       );
