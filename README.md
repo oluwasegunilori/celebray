@@ -28,18 +28,13 @@ git clone <your-repo-url>
 cd celebray
 flutter pub get
 dart run flutter_launcher_icons
-dart run tool/generate_splash_icon.dart
-dart run flutter_native_splash:create
-dart run tool/generate_splash_icon.dart
 flutter run
 ```
 
 ## Store Release Checklist
 
 1. Create Android upload keystore and `android/key.properties` (see `key.properties.example`)
-2. Run `dart run flutter_launcher_icons` and `dart run tool/generate_splash_icon.dart
-dart run flutter_native_splash:create
-dart run tool/generate_splash_icon.dart`
+2. Run `dart run flutter_launcher_icons`
 3. Deploy legal pages: `firebase deploy --only hosting` (see Store URLs below)
 4. Add App Store / Play Store screenshots
 5. Run `flutter analyze` and `flutter test` before submitting

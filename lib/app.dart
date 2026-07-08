@@ -1,9 +1,9 @@
-import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/features/auth/presentation/sign_in_screen.dart';
 import 'package:celebray/features/home/presentation/home_screen.dart';
 import 'package:celebray/features/notifications/notification_navigation_handler.dart';
 import 'package:celebray/features/onboarding/presentation/onboarding_gate.dart';
 import 'package:celebray/features/settings/presentation/settings_screen.dart';
+import 'package:celebray/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class CelebrayApp extends StatelessWidget {
@@ -16,7 +16,6 @@ class CelebrayApp extends StatelessWidget {
     return MaterialApp(
       title: 'Celebray',
       theme: AppTheme.light,
-      color: AppTheme.black,
       debugShowCheckedModeBanner: initialHome == null,
       navigatorKey: NotificationNavigationHandler.navigatorKey,
       home: initialHome ?? const OnboardingGate(),
