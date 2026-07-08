@@ -6,16 +6,18 @@ import 'package:flutter/material.dart';
 class TonePicker extends StatelessWidget {
   final ValueNotifier<String> toneNotifier;
   final List<String> tones;
+  final GlobalKey? sectionKey;
 
   const TonePicker({
     super.key,
     required this.toneNotifier,
     this.tones = MessageTones.all,
+    this.sectionKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final picker = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -54,6 +56,10 @@ class TonePicker extends StatelessWidget {
         ),
       ],
     );
+
+    if (sectionKey == null) return picker;
+
+    return KeyedSubtree(key: sectionKey, child: picker);
   }
 }
 

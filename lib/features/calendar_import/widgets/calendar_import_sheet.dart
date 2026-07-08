@@ -288,39 +288,44 @@ class _CalendarImportSheetState extends ConsumerState<CalendarImportSheet> {
     final count = _selectedKeys.length;
     final allSelected = count == total;
     final noneSelected = count == 0;
+    final actionLabel = count == 0
+        ? 'Add selected'
+        : count == 1
+            ? 'Add 1 celebration'
+            : 'Add $count celebrations';
 
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextButton(
-              onPressed: allSelected
-                  ? null
-                  : () => setState(
-                        () => _selectedKeys.addAll(
-                          suggestions.map((s) => s.dedupeKey),
-                        ),
-                      ),
-              child: const Text('Select all'),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: allSelected
+                      ? null
+                      : () => setState(
+                            () => _selectedKeys.addAll(
+                              suggestions.map((s) => s.dedupeKey),
+                            ),
+                          ),
+                  child: const Text('Select all'),
+                ),
+                TextButton(
+                  onPressed: noneSelected
+                      ? null
+                      : () => setState(_selectedKeys.clear),
+                  child: const Text('Unselect all'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: noneSelected
-                  ? null
-                  : () => setState(_selectedKeys.clear),
-              child: const Text('Unselect all'),
-            ),
-            const Spacer(),
+            const SizedBox(height: 4),
             ElevatedButton(
               onPressed: noneSelected || _isImporting ? null : _importSelected,
-              child: Text(
-                count == 0
-                    ? 'Add selected'
-                    : count == 1
-                        ? 'Add 1 celebration'
-                        : 'Add $count celebrations',
-              ),
+              child: Text(actionLabel),
             ),
           ],
         ),

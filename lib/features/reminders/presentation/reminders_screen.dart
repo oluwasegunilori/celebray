@@ -95,7 +95,7 @@ class RemindersScreen extends ConsumerWidget {
           ShareEventSheet.show(context, event: event);
         case GenerateMessage(:var eventId):
           final event = events.firstWhere((e) => e.id == eventId);
-          final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+          final hasMessage = event.hasGeneratedMessage;
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => hasMessage

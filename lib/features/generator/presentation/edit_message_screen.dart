@@ -5,13 +5,21 @@ import 'package:celebray/features/generator/presentation/generator_screen.dart';
 import 'package:celebray/features/messages/message_generation_result.dart';
 import 'package:celebray/features/messages/message_generator_service.dart';
 import 'package:celebray/features/messages/widgets/message_generation_notice.dart';
+import 'package:celebray/features/sharing/widgets/share_event_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EditMessageScreen extends ConsumerStatefulWidget {
   final EventModel event;
+  final bool navigateToShareOnSave;
+  final bool popExtraRouteOnShareSave;
 
-  const EditMessageScreen({super.key, required this.event});
+  const EditMessageScreen({
+    super.key,
+    required this.event,
+    this.navigateToShareOnSave = false,
+    this.popExtraRouteOnShareSave = false,
+  });
 
   @override
   ConsumerState<EditMessageScreen> createState() => _EditMessageScreenState();
@@ -98,12 +106,26 @@ class _EditMessageScreenState extends ConsumerState<EditMessageScreen> {
     );
 
     await ref.read(eventProvider.notifier).updateEvent(updated);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message updated')),
-      );
+
+    if (!mounted) return;
+
+    if (widget.navigateToShareOnSave) {
       Navigator.pop(context);
+
+      if (widget.popExtraRouteOnShareSave && context.mounted) {
+        Navigator.pop(context);
+      }
+
+      if (context.mounted) {
+        ShareEventSheet.show(context, event: updated);
+      }
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Message updated')),
+    );
+    Navigator.pop(context);
   }
 
   void _startFresh() {

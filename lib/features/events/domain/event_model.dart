@@ -28,6 +28,9 @@ class EventModel extends Equatable {
     this.faithContext = '',
   });
 
+  bool get hasGeneratedMessage =>
+      generatedMessage?.trim().isNotEmpty ?? false;
+
   @override
   List<Object?> get props => [
     id,
