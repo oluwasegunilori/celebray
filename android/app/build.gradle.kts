@@ -22,7 +22,7 @@ val keystoreProperties = Properties().apply {
     }
 }
 
-val minSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toIntOrNull() ?: 23
+val minSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toIntOrNull() ?: 24
 val targetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toIntOrNull() ?: 35
 val versionCode = localProperties.getProperty("versionCode")?.toIntOrNull() ?: 1
 val versionName = localProperties.getProperty("versionName") ?: "1.0"
