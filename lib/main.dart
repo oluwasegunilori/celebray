@@ -1,42 +1,49 @@
-import 'package:celebray/features/core/db/app_database.dart';
-import 'package:celebray/features/core/db/app_database_provider.dart';
-import 'package:celebray/features/home/home_screen.dart';
-import 'package:celebray/features/signin/sign_in_screen.dart';
+import 'package:celebray/app.dart';
+import 'package:celebray/core/database/app_database.dart';
+import 'package:celebray/core/database/app_database_provider.dart';
+import 'package:celebray/features/auth/data/google_sign_in_bootstrap.dart';
+import 'package:celebray/features/notifications/notification_navigation_handler.dart';
+import 'package:celebray/features/notifications/notification_service.dart';
+import 'package:celebray/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/onboarding/onboarding_manager.dart';
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  AppDatabase db = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await GoogleSignInBootstrap.initialize();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  await NotificationService.init(
+    onNotificationResponse: NotificationNavigationHandler.handleNotificationResponse,
+  );
+  await NotificationService.requestPermissions();
+
+  final db = await AppDatabase.open();
+  NotificationNavigationHandler.bindDatabase(db);
+  await NotificationNavigationHandler.captureColdStartLaunch();
+
+  final events = await db.watchAllEvents().first;
+  await NotificationService.rescheduleAll(events);
+
   runApp(
     ProviderScope(
       overrides: [appDatabaseProvider.overrideWithValue(db)],
-      child: const MyApp(),
+      child: const CelebrayApp(),
     ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Celebray',
-      theme: ThemeData(primarySwatch: Colors.pink, useMaterial3: true),
-      home: const OnboardingManager(),
-      routes: {
-        '/home': (context) => const HomeScreen(),
-        '/sign-in': (context) => SignInScreen(
-          onSignedIn: () async {
-            Navigator.pushReplacementNamed(context, '/home');
-          },
-        ),
-      },
-    );
-  }
 }

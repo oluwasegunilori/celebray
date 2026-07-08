@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Celebray</title>
+    <meta
+      name="description"
+      content="Celebray privacy policy — how we collect, use, and protect your information."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Privacy Policy</h1>
+      <p>How Celebray handles your information.</p>
+    </header>
+
+    <nav>
+      <a href="/">Home</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/terms/">Terms of Service</a>
+      <a href="/support/">Support</a>
+    </nav>
+
+    <main>
+      <p class="meta"><strong>Last updated:</strong> July 7, 2026</p>
+
+      <div class="card">
+        <p>
+          Celebray ("we", "our", or "the app") is a celebration reminder app
+          developed by Shegz. This policy explains how we handle your
+          information.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Summary</h2>
+        <ul>
+          <li>
+            <strong>Celebration events and photos</strong> stay on your device
+            unless you choose to share them yourself.
+          </li>
+          <li>
+            <strong>Sign-in is optional.</strong> You can use Celebray without a
+            Google or Apple account.
+          </li>
+          <li>
+            <strong>AI features</strong> send celebration details you include to
+            our servers and to OpenAI to generate messages.
+          </li>
+          <li>
+            <strong>We do not sell your data</strong> and we do not use it for
+            cross-app advertising or tracking.
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Information Stored on Your Device Only</h2>
+        <p>The following stays in local storage on your device and is <strong>not</strong> uploaded to our cloud:</p>
+        <ul>
+          <li>Celebrations you add (names, dates, relationships, closeness, memories, photos)</li>
+          <li>Notification schedules for celebration-day alerts</li>
+          <li>Your profile name, email, and photo after sign-in (stored in secure local storage)</li>
+          <li>Calendar suggestions when you use calendar import (processed on device)</li>
+        </ul>
+        <p>Uninstalling the app removes locally stored celebration data.</p>
+      </div>
+
+      <div class="card">
+        <h2>Information We Collect</h2>
+        <p>
+          "Collect" means data transmitted off your device in a way that we or our
+          service providers can access for longer than needed to handle a single
+          real-time request.
+        </p>
+
+        <h3>Account and identifiers</h3>
+        <ul>
+          <li>
+            <strong>Name and email address</strong> — if you sign in with Google or
+            Apple (via Firebase Authentication)
+          </li>
+          <li>
+            <strong>User ID</strong> — a Firebase user identifier for all users,
+            including guest AI (anonymous sign-in), used for authentication and
+            AI rate limits
+          </li>
+        </ul>
+
+        <h3>User content (AI features)</h3>
+        <p>
+          When you use AI message generation or touch-up, we send celebration
+          details you provide, such as the person's name, event type, relationship,
+          optional memories, tone, faith context, message text, and edit
+          instructions. This data is processed on Google Cloud Functions and
+          forwarded to <strong>OpenAI</strong>. We do not permanently store the
+          content of AI requests on our servers.
+        </p>
+
+        <h3>Optional sensitive information</h3>
+        <p>
+          If you choose a <strong>faith context</strong> for a celebration, that
+          religious preference may be included in AI requests. This is optional
+          and only sent when you use AI features.
+        </p>
+
+        <h3>Usage data</h3>
+        <ul>
+          <li>
+            <strong>AI usage counters</strong> — we store a daily request count
+            per Firebase user ID in Firestore to enforce rate limits (10/day for
+            guests, 20/day for signed-in users)
+          </li>
+        </ul>
+
+        <h3>Diagnostics</h3>
+        <ul>
+          <li>
+            <strong>Crash data</strong> — anonymous crash reports via Firebase
+            Crashlytics to improve app stability
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>How We Use Information</h2>
+        <ul>
+          <li>
+            To send a <strong>midnight notification on the celebration day</strong>
+            with quick access to share your message
+          </li>
+          <li>To generate and refine celebration messages when you use AI features</li>
+          <li>To authenticate your account when you choose to sign in</li>
+          <li>To enforce fair-use limits on AI features</li>
+          <li>To diagnose and fix crashes</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>What We Do Not Collect</h2>
+        <p>
+          We do not collect location, contacts, health or financial data, browsing
+          history, or in-app purchase history. We do not upload your event photos
+          to our servers. We do not use advertising SDKs or collect data for
+          cross-app tracking.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Data Storage</h2>
+        <p>
+          All event data is stored <strong>locally on your device</strong>. We do
+          not sync your celebrations to a cloud database in the current version.
+        </p>
+        <p>
+          AI message requests are processed transiently on Google Cloud Functions
+          and forwarded to OpenAI. They are not saved as a permanent message
+          history on our servers.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Third-Party Services</h2>
+        <ul>
+          <li><strong>Firebase Authentication</strong> — sign-in with Google and Apple; anonymous auth for guest AI</li>
+          <li><strong>Firebase Cloud Functions</strong> — secure backend for AI message generation</li>
+          <li><strong>Firebase Firestore</strong> — daily AI usage counters only (not your events)</li>
+          <li><strong>Firebase Crashlytics</strong> — crash reporting</li>
+          <li>
+            <strong>OpenAI</strong> — processes celebration details you submit to
+            generate message text.
+            <a href="https://openai.com/policies/privacy-policy">OpenAI privacy policy</a>
+          </li>
+          <li><strong>Google Sign-In / Sign in with Apple</strong> — authentication</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Your Rights</h2>
+        <p>
+          You can delete your account and local profile data from Settings. You
+          can delete individual events from the Reminders screen. Uninstalling
+          the app removes all locally stored celebration data.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Contact</h2>
+        <p>
+          For privacy questions, contact:
+          <a href="mailto:privacy@celebray.app">privacy@celebray.app</a>
+        </p>
+      </div>
+    </main>
+
+    <footer>&copy; 2026 Celebray. All rights reserved.</footer>
+  </body>
+</html>

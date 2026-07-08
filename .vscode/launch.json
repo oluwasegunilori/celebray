@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "celebray (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "ios"
+    },
+    {
+      "name": "celebray",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "celebray (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "celebray (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}

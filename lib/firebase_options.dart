@@ -4,16 +4,6 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -52,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDPRgizyZrQFgT2e0zUOHR-4JL-_mQxbQI',
-    appId: '1:68778743183:android:03963effdbb08719b8a7fa',
+    appId: '1:68778743183:android:7fd9fc5609dbe372b8a7fa',
     messagingSenderId: '68778743183',
     projectId: 'celebray-fa7ae',
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
@@ -60,19 +50,21 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCzBd7lqXuBOW_oeIAbshwjpDHYm3eNhFM',
-    appId: '1:68778743183:ios:c29c531de218cadab8a7fa',
+    appId: '1:68778743183:ios:e1847c1af4f3f0a8b8a7fa',
     messagingSenderId: '68778743183',
     projectId: 'celebray-fa7ae',
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
-    iosBundleId: 'com.example.celebray',
+    iosClientId: '68778743183-mac6b1mcj9rt59q9evcr7o14p53rj5eq.apps.googleusercontent.com',
+    iosBundleId: 'com.shegz.celebray',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCzBd7lqXuBOW_oeIAbshwjpDHYm3eNhFM',
-    appId: '1:68778743183:ios:c29c531de218cadab8a7fa',
+    appId: '1:68778743183:ios:4491a3325947142bb8a7fa',
     messagingSenderId: '68778743183',
     projectId: 'celebray-fa7ae',
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
+    iosClientId: '68778743183-2g75emk8blahqb9dacjmbt7njshrvg2b.apps.googleusercontent.com',
     iosBundleId: 'com.example.celebray',
   );
 
@@ -85,4 +77,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'celebray-fa7ae.firebasestorage.app',
     measurementId: 'G-23Y4WT5BM7',
   );
+
 }

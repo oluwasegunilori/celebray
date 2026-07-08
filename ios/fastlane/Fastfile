@@ -1,0 +1,176 @@
+# Celebray iOS TestFlight lanes
+#
+# Setup (once):
+#   cd ios && bundle install
+#
+# Auth — pick one:
+#   A) App Store Connect API key (recommended):
+#      export APP_STORE_CONNECT_KEY_ID="..."
+#      export APP_STORE_CONNECT_ISSUER_ID="..."
+#      export APP_STORE_CONNECT_KEY_PATH="/path/to/AuthKey_XXXX.p8"
+#   B) Apple ID + app-specific password:
+#      export APPLE_ID="you@example.com"
+#      export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+#
+# Load env (handles paths with spaces — use quotes in KEY_PATH):
+#   set -a && source ios/fastlane/.env && set +a
+#   cd ios && bundle exec fastlane beta
+#
+# Build IPA only (no bump, no upload):
+#   cd ios && bundle exec fastlane build
+#
+# Bump build number only (updates pubspec.yaml):
+#   cd ios && bundle exec fastlane bump_build
+#
+# Optional: skip auto-bump when running beta
+#   cd ios && bundle exec fastlane beta skip_bump:true
+
+default_platform(:ios)
+
+platform :ios do
+  PROJECT_ROOT = File.expand_path("../..", __dir__)
+  IOS_ROOT = File.expand_path("..", __dir__)
+  PUBSPEC_PATH = File.join(PROJECT_ROOT, "pubspec.yaml")
+
+  def read_pubspec_version
+    content = File.read(PUBSPEC_PATH)
+    match = content.match(/^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/)
+    UI.user_error!("Could not parse version from #{PUBSPEC_PATH}") unless match
+
+    { marketing: match[1], build: match[2].to_i }
+  end
+
+  def write_pubspec_version(marketing:, build:)
+    content = File.read(PUBSPEC_PATH)
+    unless content.match?(/^version:\s*\d+\.\d+\.\d+\+\d+\s*$/)
+      UI.user_error!("Could not update version line in #{PUBSPEC_PATH}")
+    end
+
+    updated = content.sub(/^version:\s*.+$/, "version: #{marketing}+#{build}")
+    File.write(PUBSPEC_PATH, updated)
+  end
+
+  def bump_build_number!
+    current = read_pubspec_version
+    next_build = current[:build] + 1
+    write_pubspec_version(marketing: current[:marketing], build: next_build)
+    UI.success("Version bumped to #{current[:marketing]}+#{next_build}")
+    { marketing: current[:marketing], build: next_build }
+  end
+
+  def bump_marketing_version!(part:)
+    current = read_pubspec_version
+    major, minor, patch = current[:marketing].split(".").map(&:to_i)
+
+    case part.to_s
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    else
+      UI.user_error!("Invalid bump type: #{part}. Use major, minor, or patch.")
+    end
+
+    marketing = [major, minor, patch].join(".")
+    write_pubspec_version(marketing: marketing, build: current[:build])
+    UI.success("Marketing version bumped to #{marketing}+#{current[:build]}")
+    { marketing: marketing, build: current[:build] }
+  end
+
+  def flutter_ipa_path
+    matches = Dir[File.join(PROJECT_ROOT, "build/ios/ipa/*.ipa")]
+    UI.user_error!("No IPA found. Run build first.") if matches.empty?
+
+    matches.first
+  end
+
+  def connect_api_key
+    return @connect_api_key if defined?(@connect_api_key)
+
+    unless ENV["APP_STORE_CONNECT_KEY_ID"] &&
+           ENV["APP_STORE_CONNECT_ISSUER_ID"] &&
+           ENV["APP_STORE_CONNECT_KEY_PATH"]
+      @connect_api_key = nil
+      return nil
+    end
+
+    @connect_api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_KEY_PATH"],
+      duration: 1200,
+      in_house: false,
+    )
+  end
+
+  def upload_ipa_to_testflight(ipa:)
+    upload_params = {
+      ipa: ipa,
+      skip_waiting_for_build_processing: true,
+      distribute_external: false,
+      notify_external_testers: false,
+    }
+
+    key = connect_api_key
+    upload_params[:api_key] = key if key
+
+    upload_to_testflight(**upload_params)
+  end
+
+  private_lane :prepare do
+    generated_xcconfig = File.join(IOS_ROOT, "Flutter", "Generated.xcconfig")
+
+    Dir.chdir(PROJECT_ROOT) do
+      sh("flutter", "pub", "get")
+      unless File.exist?(generated_xcconfig)
+        UI.user_error!(
+          "Missing #{generated_xcconfig}. Run `flutter pub get` from the project root, then retry."
+        )
+      end
+
+      # Use bundled CocoaPods from the repo Gemfile (not system `pod`).
+      sh("bundle", "exec", "pod", "install", "--project-directory=ios", "--repo-update")
+    end
+  end
+
+  desc "Bump the Flutter build number in pubspec.yaml (+1)"
+  lane :bump_build do
+    bump_build_number!
+  end
+
+  desc "Bump marketing version in pubspec.yaml (major|minor|patch)"
+  lane :bump_version do |options|
+    part = options[:part] || ENV["BUMP_PART"] || "patch"
+    bump_marketing_version!(part: part)
+    bump_build_number!
+  end
+
+  desc "Build a release IPA with Flutter"
+  lane :build do
+    prepare
+
+    Dir.chdir(PROJECT_ROOT) do
+      sh("flutter", "build", "ipa", "--release")
+    end
+
+    ipa = flutter_ipa_path
+    UI.success("Built #{ipa}")
+  end
+
+  desc "Build and upload to TestFlight (auto-bumps build number)"
+  lane :beta do |options|
+    bump_build_number! unless options[:skip_bump]
+    build
+    upload_ipa_to_testflight(ipa: flutter_ipa_path)
+  end
+
+  desc "Upload the latest built IPA to TestFlight (skip build)"
+  lane :upload do
+    upload_ipa_to_testflight(ipa: flutter_ipa_path)
+  end
+end
