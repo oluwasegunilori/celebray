@@ -55,7 +55,7 @@ class AiMessageApi {
       'closeness': event.closeness,
       'memories': event.memories,
       'faithContext': event.faithContext,
-      ?'tone': tone,
+      if (tone != null) 'tone': tone,
     };
   }
 
