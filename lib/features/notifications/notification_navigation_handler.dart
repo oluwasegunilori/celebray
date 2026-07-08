@@ -1,11 +1,8 @@
 import 'package:celebray/core/database/app_database.dart';
-import 'package:celebray/features/events/domain/event_actions.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/generator/presentation/edit_message_screen.dart';
 import 'package:celebray/features/generator/presentation/generator_screen.dart';
 import 'package:celebray/features/notifications/notification_service.dart';
-import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
-import 'package:celebray/features/reminders/presentation/event_detail_sheet.dart';
 import 'package:celebray/features/sharing/widgets/share_event_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -72,36 +69,18 @@ class NotificationNavigationHandler {
     EventModel event, {
     required bool openShare,
   }) async {
-    EventDetailSheet.show(
-      context,
-      event: event,
-      openShareOnOpen: openShare,
-      onAction: (action) => _handleAction(context, action, event),
-    );
-  }
-
-  static void _handleAction(
-    BuildContext context,
-    EventAction action,
-    EventModel event,
-  ) {
-    switch (action) {
-      case ShareEvent():
-        ShareEventSheet.show(context, event: event);
-      case EditEvent(:var event):
-        showAddEventSheet(context, event: event);
-      case GenerateMessage():
-        final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => hasMessage
-                ? EditMessageScreen(event: event)
-                : GeneratorScreen(initialEvent: event),
-          ),
-        );
-      case ViewEvent():
-      case DeleteEvent():
-        break;
+    if (openShare) {
+      ShareEventSheet.show(context, event: event);
+      return;
     }
+
+    final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => hasMessage
+            ? EditMessageScreen(event: event)
+            : GeneratorScreen(initialEvent: event),
+      ),
+    );
   }
 }

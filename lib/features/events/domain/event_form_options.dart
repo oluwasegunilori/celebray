@@ -191,4 +191,53 @@ class EventFormOptions {
     if (_feminineRelationships.contains(relationship)) return 'Female';
     return null;
   }
+
+  /// Keeps person/couple names separate from the celebration type field.
+  ///
+  /// Examples: "David's Birthday" + Birthday → "David";
+  /// "David & Jessica" + Anniversary → "David & Jessica".
+  static String normalizePersonName(String rawName, {String? eventType}) {
+    var working = rawName.trim();
+    if (working.isEmpty) return working;
+
+    if (eventType != null && eventType.trim().isNotEmpty) {
+      final stripped = _stripTrailingType(working, eventType.trim());
+      if (stripped != null && stripped.isNotEmpty) {
+        working = stripped;
+      }
+    }
+
+    return working.isEmpty ? rawName.trim() : working;
+  }
+
+  static String? _stripTrailingType(String name, String type) {
+    final escaped = RegExp.escape(type.trim());
+    final patterns = [
+      RegExp("^(.+?)'s?\\s+$escaped\\s*\$", caseSensitive: false),
+      RegExp("^$escaped\\s*[-–—:of]+\\s*(.+)\$", caseSensitive: false),
+      RegExp("^(.+)\\s+$escaped\\s*\$", caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(name.trim());
+      if (match == null) continue;
+
+      final extracted = (match.group(1) ?? match.group(2))?.trim();
+      if (extracted != null &&
+          extracted.isNotEmpty &&
+          !_isCelebrationWord(extracted)) {
+        return extracted;
+      }
+    }
+
+    return null;
+  }
+
+  static bool _isCelebrationWord(String value) {
+    final lower = value.toLowerCase();
+    return lower == 'birthday' ||
+        lower == 'bday' ||
+        lower == 'anniversary' ||
+        lower == 'wedding';
+  }
 }

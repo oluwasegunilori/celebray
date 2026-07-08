@@ -8,7 +8,7 @@ class AppConstants {
   static const String notificationChannelId = 'celebray_reminders';
   static const String notificationChannelName = 'Celebration Reminders';
   static const String notificationChannelDescription =
-      'Alerts on celebration days so you can share your message';
+      'Midnight alerts on celebration days with quick access to messages and sharing';
 
   static const String firebaseProjectId = 'celebray-fa7ae';
   static const String aiFunctionsRegion = 'us-central1';

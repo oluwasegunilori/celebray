@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:celebray/features/calendar_import/domain/calendar_suggestion.dart';
+import 'package:celebray/features/events/domain/event_form_options.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/foundation.dart';
@@ -38,7 +39,8 @@ class CalendarImportService {
         return const CalendarImportResult(
           status: CalendarImportStatus.permissionDenied,
           message:
-              'Calendar access is needed to find birthdays and anniversaries.',
+              'Calendar access is needed to find birthdays and anniversaries. '
+              'On iPhone, open Settings → Celebray → Calendars and choose Full Access.',
         );
       }
 
@@ -134,6 +136,12 @@ class CalendarImportService {
         message:
             'Calendar import is not loaded yet. Fully stop the app, then run it again on iPhone or Android (a hot restart is not enough).',
       );
+    } on PlatformException catch (e) {
+      return CalendarImportResult(
+        status: CalendarImportStatus.error,
+        message: e.message ??
+            'Could not read your calendar. Please try again.',
+      );
     } catch (e) {
       return CalendarImportResult(
         status: CalendarImportStatus.error,
@@ -150,7 +158,14 @@ class CalendarImportService {
       }
 
       final requested = await _plugin.requestPermissions();
-      return requested.isSuccess && (requested.data ?? false);
+      if (requested.isSuccess && (requested.data ?? false)) {
+        return true;
+      }
+
+      // Re-check after the system dialog — iOS 17+ may grant full access
+      // asynchronously after requestFullAccessToEvents completes.
+      final recheck = await _plugin.hasPermissions();
+      return recheck.isSuccess && (recheck.data ?? false);
     } on MissingPluginException {
       rethrow;
     }
@@ -322,12 +337,18 @@ class CalendarImportService {
     CalendarSuggestion suggestion,
     List<EventModel> existingEvents,
   ) {
-    final normalizedName = suggestion.name.toLowerCase().trim();
+    final normalizedName = EventFormOptions.normalizePersonName(
+      suggestion.name,
+      eventType: suggestion.type,
+    ).toLowerCase().trim();
 
     for (final event in existingEvents) {
       if (!EventDateUtils.occursOnDay(event.date, suggestion.date)) continue;
 
-      final existingName = event.name.toLowerCase().trim();
+      final existingName = EventFormOptions.normalizePersonName(
+        event.name,
+        eventType: event.type,
+      ).toLowerCase().trim();
       if (existingName == normalizedName ||
           existingName.contains(normalizedName) ||
           normalizedName.contains(existingName)) {

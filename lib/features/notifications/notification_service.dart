@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/events/presentation/event_display_labels.dart';
 import 'package:celebray/core/utils/event_date_utils.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -124,11 +125,12 @@ class NotificationService {
 
     if (!when.isAfter(now)) return;
 
-    final label = event.name.isNotEmpty ? event.name : event.type;
-    final title = "🎉 It's $label's ${event.type} today!";
-    final body = event.generatedMessage?.trim().isNotEmpty ?? false
-        ? 'Tap to celebrate and share your message.'
-        : 'Tap to open details and share your celebration.';
+    final recipient = EventDisplayLabels.recipientLabel(event);
+    final title = EventDisplayLabels.notificationTitle(event);
+    final hasSavedMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+    final body = hasSavedMessage
+        ? 'Your message for $recipient is ready — tap to touch up or share.'
+        : 'Tap for customizable message ideas for $recipient — pick one, refine, and share.';
 
     await _plugin.zonedSchedule(
       _notificationId(event.id),

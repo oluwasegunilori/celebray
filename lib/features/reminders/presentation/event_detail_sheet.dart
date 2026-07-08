@@ -1,6 +1,7 @@
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/features/events/domain/event_actions.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/events/presentation/event_display_labels.dart';
 import 'package:celebray/core/widgets/event_avatar.dart';
 import 'package:celebray/features/sharing/widgets/share_event_sheet.dart';
 import 'package:celebray/core/utils/date_format.dart';
@@ -73,6 +74,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
         : null;
 
     final hasMessage = event.generatedMessage?.trim().isNotEmpty ?? false;
+    final displayTitle = EventDisplayLabels.from(event).title;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -112,7 +114,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          event.name.isNotEmpty ? event.name : event.type,
+                          displayTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

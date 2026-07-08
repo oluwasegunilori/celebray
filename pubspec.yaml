@@ -2,7 +2,7 @@ name: celebray
 description: "Remember and celebrate birthdays, anniversaries, and milestones with smart reminders."
 publish_to: 'none'
 
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.8.1
@@ -39,7 +39,10 @@ dependencies:
   url_launcher: ^6.3.1
   package_info_plus: ^8.3.0
   google_fonts: ^8.1.0
-  device_calendar: ^3.9.0
+  device_calendar:
+    git:
+      url: https://github.com/builttoroam/device_calendar.git
+      ref: master
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +55,9 @@ dev_dependencies:
   build_runner: ^2.15.0
   riverpod_generator: ^4.0.4
   flutter_launcher_icons: ^0.14.3
+
+dependency_overrides:
+  timezone: ^0.10.0
 
 flutter_launcher_icons:
   android: true

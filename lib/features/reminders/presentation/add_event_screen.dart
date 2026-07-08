@@ -319,7 +319,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   String _missingFieldMessage(_AddEventField field) {
     switch (field) {
       case _AddEventField.name:
-        return 'Please enter an event name.';
+        return 'Please enter who this celebration is for.';
       case _AddEventField.date:
         return 'Please select an event date.';
       case _AddEventField.eventType:
@@ -441,9 +441,14 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   }
 
   EventModel _buildEventModel() {
+    final normalizedName = EventFormOptions.normalizePersonName(
+      name,
+      eventType: selectedType,
+    );
+
     return EventModel(
       id: widget.event?.id ?? uniqueId(),
-      name: name,
+      name: normalizedName,
       type: selectedType!,
       date: date!,
       relationship: selectedRelationship!,
@@ -476,7 +481,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _summaryRow('Name', event.name),
+                  _summaryRow('Who', event.name),
                   _summaryRow('Date', dateFormatterDay.format(event.date)),
                   _summaryRow('Type', event.type),
                   _summaryRow('Relationship', event.relationship),
@@ -729,13 +734,24 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       fieldKey: _nameFieldKey,
                       controller: eventNameController,
                       focusNode: _nameFocusNode,
-                      label: 'Event Name',
-                    hint: "e.g. Mike's Birthday, Olu & Dara's Anniversary",
-                    icon: Icons.event,
+                      label: 'Who is it for?',
+                      hint: 'e.g. David, or David & Jessica',
+                    icon: Icons.person_outline,
                     onSaved: (v) => name = v ?? '',
                     validator: (v) => v == null || v.isEmpty
-                        ? 'Please enter an event name'
+                        ? 'Please enter a name'
                         : null,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+                    child: Text(
+                      'Choose the celebration type below — Birthday, Anniversary, and more.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

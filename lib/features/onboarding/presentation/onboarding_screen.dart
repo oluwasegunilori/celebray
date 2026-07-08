@@ -18,7 +18,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardPage(
       image: Icons.cake,
       title: "Welcome to Celebray 🎉",
-      desc: "Never miss a birthday or anniversary again.",
+      desc:
+          "Add who it's for — like David or David & Jessica — then pick the celebration type: birthday, anniversary, and more.",
     ),
     OnboardPage(
       image: Icons.auto_awesome,

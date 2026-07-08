@@ -144,7 +144,8 @@ class _CalendarImportSheetState extends ConsumerState<CalendarImportSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'We scan your calendar for birthdays and anniversaries you have not added yet.',
+                  'We scan your calendar for birthdays and anniversaries. '
+                  'Celebrations you have already added in Celebray are not shown.',
                   style: TextStyle(color: Colors.grey.shade700, height: 1.4),
                 ),
               ),
@@ -282,7 +283,11 @@ class _CalendarImportSheetState extends ConsumerState<CalendarImportSheet> {
   }
 
   Widget _buildImportBar() {
+    final suggestions = _result!.suggestions;
+    final total = suggestions.length;
     final count = _selectedKeys.length;
+    final allSelected = count == total;
+    final noneSelected = count == 0;
 
     return SafeArea(
       top: false,
@@ -291,22 +296,24 @@ class _CalendarImportSheetState extends ConsumerState<CalendarImportSheet> {
         child: Row(
           children: [
             TextButton(
-              onPressed: count == _result!.suggestions.length
-                  ? () => setState(() => _selectedKeys.clear())
+              onPressed: allSelected
+                  ? null
                   : () => setState(
-                      () => _selectedKeys.addAll(
-                        _result!.suggestions.map((s) => s.dedupeKey),
+                        () => _selectedKeys.addAll(
+                          suggestions.map((s) => s.dedupeKey),
+                        ),
                       ),
-                    ),
-              child: Text(
-                count == _result!.suggestions.length
-                    ? 'Clear all'
-                    : 'Select all',
-              ),
+              child: const Text('Select all'),
+            ),
+            TextButton(
+              onPressed: noneSelected
+                  ? null
+                  : () => setState(_selectedKeys.clear),
+              child: const Text('Unselect all'),
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: count == 0 || _isImporting ? null : _importSelected,
+              onPressed: noneSelected || _isImporting ? null : _importSelected,
               child: Text(
                 count == 0
                     ? 'Add selected'
