@@ -4,6 +4,7 @@ class AppConstants {
   static const String privacyPolicyUrl = '$siteBaseUrl/privacy';
   static const String termsUrl = '$siteBaseUrl/terms';
   static const String supportUrl = '$siteBaseUrl/support';
+  static const String feedbackEmail = 'itisourlives@gmail.com';
 
   static const String notificationChannelId = 'celebray_reminders';
   static const String notificationChannelName = 'Celebration Reminders';

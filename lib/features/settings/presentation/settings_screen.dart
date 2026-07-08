@@ -55,6 +55,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _sendFeedback() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: AppConstants.feedbackEmail,
+      queryParameters: {
+        'subject': 'Celebray beta feedback',
+        'body': '''
+Build: $_appVersion
+
+What I tried to do:
+
+
+What I expected:
+
+
+One thing to add or change:
+
+
+Bug or idea (optional):
+
+''',
+      },
+    );
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+      return;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Email ${AppConstants.feedbackEmail} from your mail app.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _deleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -201,6 +241,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.feedback_outlined, color: AppTheme.primary),
+            title: const Text('Send feedback'),
+            subtitle: const Text('Share ideas, bugs, or what you’d like next'),
+            trailing: const Icon(Icons.mail_outline, size: 18),
+            onTap: _sendFeedback,
+          ),
           ListTile(
             leading: const Icon(Icons.privacy_tip, color: AppTheme.primary),
             title: const Text('Privacy Policy'),
