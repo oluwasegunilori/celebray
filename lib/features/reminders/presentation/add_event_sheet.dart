@@ -15,29 +15,35 @@ void showAddEventSheet(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.8,
-        minChildSize: 0.5,
-        maxChildSize: 0.85,
-        builder: (context, scrollController) {
-          return Material(
-            child: Column(
-              children: [
-                SheetHeader(
-                  title: event != null ? 'Edit Event' : 'Add Event',
-                  onClose: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: AddEventScreen(
-                    event: event,
-                    initialData: initialData,
+      final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: bottomInset > 0 ? 0.92 : 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Material(
+              child: Column(
+                children: [
+                  SheetHeader(
+                    title: event != null ? 'Edit Event' : 'Add Event',
+                    onClose: () => Navigator.pop(context),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                  Expanded(
+                    child: AddEventScreen(
+                      event: event,
+                      initialData: initialData,
+                      scrollController: scrollController,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       );
     },
   );

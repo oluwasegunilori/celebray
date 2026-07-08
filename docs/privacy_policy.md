@@ -4,13 +4,54 @@
 
 Celebray ("we", "our", or "the app") is a celebration reminder app developed by Shegz. This policy explains how we handle your information.
 
+## Summary
+
+- **Celebration events and photos** stay on your device unless you choose to share them yourself.
+- **Sign-in is optional.** You can use Celebray without a Google or Apple account.
+- **AI features** send celebration details you include to our servers and to OpenAI to generate messages.
+- **We do not sell your data** and we do not use it for cross-app advertising or tracking.
+
+## Information Stored on Your Device Only
+
+The following stays in local storage on your device and is **not** uploaded to our cloud:
+
+- Celebrations you add (names, dates, relationships, closeness, memories, photos)
+- Notification schedules for celebration-day alerts
+- Your profile name, email, and photo after sign-in (stored in secure local storage)
+- Calendar suggestions when you use calendar import (processed on device)
+
+Uninstalling the app removes locally stored celebration data.
+
 ## Information We Collect
 
-- **Account information:** If you sign in with Google or Apple, we store your name, email, and profile photo locally on your device using secure storage. Guest AI uses Firebase Anonymous Authentication (a random user ID with no personal details).
-- **Event data:** Celebrations you add (names, dates, relationships, memories, photos) are stored locally on your device in a SQLite database.
-- **AI request data:** When you use AI message generation or touch-up, the app sends relevant celebration details (name, event type, relationship, memories, tone, and faith context if provided) to our servers for processing. We do not permanently store the content of these requests.
-- **AI usage counters:** We store a daily request count per Firebase user ID in Firestore to enforce rate limits (10/day for guests, 20/day for signed-in users).
-- **Crash reports:** Anonymous crash data may be collected via Firebase Crashlytics to improve app stability.
+"Collect" means data transmitted off your device in a way that we or our service providers can access for longer than needed to handle a single real-time request.
+
+### Account and identifiers
+
+- **Name and email address** — if you sign in with Google or Apple (via Firebase Authentication)
+- **User ID** — a Firebase user identifier for all users, including guest AI (anonymous sign-in), used for authentication and AI rate limits
+
+### User content (AI features)
+
+When you use AI message generation or touch-up, we send celebration details you provide, such as:
+
+- Person's name, event type, and relationship
+- Optional memories, tone, and faith context
+- Message text and edit instructions (for touch-up)
+
+This data is processed on Google Cloud Functions and forwarded to **OpenAI** to generate responses. We do not permanently store the content of AI requests on our servers. OpenAI processes data under its own privacy policy.
+
+### Optional sensitive information
+
+If you choose a **faith context** for a celebration, that religious preference may be included in AI requests. This is optional and only sent when you use AI features.
+
+### Usage data
+
+- **AI usage counters** — we store a daily request count per Firebase user ID in Firestore to enforce rate limits (10/day for guests, 20/day for signed-in users)
+
+### Diagnostics
+
+- **Crash data** — anonymous crash reports via Firebase Crashlytics to improve app stability
 
 ## How We Use Information
 
@@ -18,6 +59,11 @@ Celebray ("we", "our", or "the app") is a celebration reminder app developed by 
 - To generate and refine celebration messages when you use AI features
 - To authenticate your account when you choose to sign in
 - To enforce fair-use limits on AI features
+- To diagnose and fix crashes
+
+## What We Do Not Collect
+
+We do not collect location, contacts, health or financial data, browsing history, or in-app purchase history. We do not upload your event photos to our servers. We do not use advertising SDKs or collect data for cross-app tracking.
 
 ## Data Storage
 

@@ -2,7 +2,7 @@ name: celebray
 description: "Remember and celebrate birthdays, anniversaries, and milestones with smart reminders."
 publish_to: 'none'
 
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.8.1

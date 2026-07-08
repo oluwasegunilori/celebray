@@ -16,10 +16,16 @@ enum _AddEventField { name, date, eventType, relationship, sex, closeness }
 
 //Updates and adds new events
 class AddEventScreen extends ConsumerStatefulWidget {
-  const AddEventScreen({super.key, this.event, this.initialData});
+  const AddEventScreen({
+    super.key,
+    this.event,
+    this.initialData,
+    this.scrollController,
+  });
 
   final EventModel? event;
   final EventModel? initialData;
+  final ScrollController? scrollController;
 
   @override
   ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
@@ -28,7 +34,11 @@ class AddEventScreen extends ConsumerStatefulWidget {
 class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
+  final _nameSectionKey = GlobalKey();
+  final _memoriesSectionKey = GlobalKey();
   final _nameFieldKey = GlobalKey<FormFieldState<String>>();
+  final _nameFocusNode = FocusNode();
+  final _memoriesFocusNode = FocusNode();
   final _dateFieldKey = GlobalKey<FormFieldState<String>>();
   final _eventTypeKey = GlobalKey();
   final _relationshipKey = GlobalKey();
@@ -241,6 +251,32 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     eventNameController.addListener(() {
       _maybeInferEventTypeFromName(eventNameController.text);
     });
+
+    _nameFocusNode.addListener(() {
+      if (_nameFocusNode.hasFocus) {
+        _scrollFocusedFieldIntoView(_nameSectionKey);
+      }
+    });
+    _memoriesFocusNode.addListener(() {
+      if (_memoriesFocusNode.hasFocus) {
+        _scrollFocusedFieldIntoView(_memoriesSectionKey);
+      }
+    });
+  }
+
+  void _scrollFocusedFieldIntoView(GlobalKey fieldKey) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final targetContext = fieldKey.currentContext;
+      if (targetContext == null) return;
+
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.25,
+      );
+    });
   }
 
   @override
@@ -248,6 +284,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     eventNameController.dispose();
     eventDateController.dispose();
     memoriesController.dispose();
+    _nameFocusNode.dispose();
+    _memoriesFocusNode.dispose();
     _scrollController.dispose();
     _eventTypeController.dispose();
     _relationshipController.dispose();
@@ -313,7 +351,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   GlobalKey? _keyForField(_AddEventField field) {
     switch (field) {
       case _AddEventField.name:
-        return _nameFieldKey;
+        return _nameSectionKey;
       case _AddEventField.date:
         return _dateFieldKey;
       case _AddEventField.eventType:
@@ -669,6 +707,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   @override
   Widget build(BuildContext context) {
     final eventNotifier = ref.read(eventProvider.notifier);
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final scrollController = widget.scrollController ?? _scrollController;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -678,19 +718,25 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             child: Form(
               key: _formKey,
               child: ListView(
-                controller: _scrollController,
+                controller: scrollController,
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.only(bottom: keyboardInset > 0 ? 12 : 0),
                 children: [
                   const SizedBox(height: 5),
-                  _buildTextField(
-                    fieldKey: _nameFieldKey,
-                    controller: eventNameController,
-                    label: 'Event Name',
+                  KeyedSubtree(
+                    key: _nameSectionKey,
+                    child: _buildTextField(
+                      fieldKey: _nameFieldKey,
+                      controller: eventNameController,
+                      focusNode: _nameFocusNode,
+                      label: 'Event Name',
                     hint: "e.g. Mike's Birthday, Olu & Dara's Anniversary",
                     icon: Icons.event,
                     onSaved: (v) => name = v ?? '',
                     validator: (v) => v == null || v.isEmpty
                         ? 'Please enter an event name'
                         : null,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   InkWell(
@@ -897,16 +943,17 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField(
-                          controller: memoriesController,
-                          label: 'Add info',
-                          hint: 'e.g. loves jazz, always late, favorite quote',
-                          icon: Icons.book,
-                          optional: true,
-                          onSaved:
-                              (
-                                _,
-                              ) {}, // not needed since we manage via controller
+                        child: KeyedSubtree(
+                          key: _memoriesSectionKey,
+                          child: _buildTextField(
+                            controller: memoriesController,
+                            focusNode: _memoriesFocusNode,
+                            label: 'Add info',
+                            hint: 'e.g. loves jazz, always late, favorite quote',
+                            icon: Icons.book,
+                            optional: true,
+                            onSaved: (_) {},
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -1044,6 +1091,7 @@ Widget _buildTextField({
   Key? fieldKey,
   required String label,
   TextEditingController? controller,
+  FocusNode? focusNode,
   String? hint,
   IconData? icon,
   bool optional = false,
@@ -1054,6 +1102,7 @@ Widget _buildTextField({
   return TextFormField(
     key: fieldKey,
     controller: controller,
+    focusNode: focusNode,
     decoration: InputDecoration(
       labelText: optional ? '$label (optional)' : label,
       hintText: hint,

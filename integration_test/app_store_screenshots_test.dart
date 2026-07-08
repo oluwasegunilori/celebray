@@ -61,7 +61,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(PageView), const Offset(-380, 0));
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
       await binding.takeScreenshot('05_onboarding_messages');
     });
