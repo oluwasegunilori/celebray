@@ -37,7 +37,7 @@ class EventAvatar extends StatelessWidget {
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(),
+                errorBuilder: (_, _, _) => _fallback(),
               )
             : _fallback(),
       ),

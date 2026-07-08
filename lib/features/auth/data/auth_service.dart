@@ -128,9 +128,8 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser =
+      final GoogleSignInAccount googleUser =
           await _googleSignIn.authenticate();
-      if (googleUser == null) return null;
 
       final googleAuth = googleUser.authentication;
 

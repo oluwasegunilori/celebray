@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignedIn;
 
-  const SignInScreen({required this.onSignedIn});
+  const SignInScreen({super.key, required this.onSignedIn});
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();

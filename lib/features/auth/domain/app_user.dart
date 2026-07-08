@@ -8,7 +8,7 @@ class AppUser extends Equatable {
   final String? email;
   final String? photoUrl;
 
-  AppUser({this.uid, this.name, this.email, this.photoUrl});
+  const AppUser({this.uid, this.name, this.email, this.photoUrl});
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
     uid: json['uid'],

@@ -44,10 +44,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   final _relationshipKey = GlobalKey();
   final _sexKey = GlobalKey();
   final _closenessKey = GlobalKey();
-  final _eventTypeController = ExpansionTileController();
-  final _relationshipController = ExpansionTileController();
-  final _sexController = ExpansionTileController();
-  final _faithController = ExpansionTileController();
+  final _eventTypeController = ExpansibleController();
+  final _relationshipController = ExpansibleController();
+  final _sexController = ExpansibleController();
+  final _faithController = ExpansibleController();
 
   late String name;
   String? selectedType;
@@ -333,7 +333,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     }
   }
 
-  ExpansionTileController? _controllerForField(_AddEventField field) {
+  ExpansibleController? _controllerForField(_AddEventField field) {
     switch (field) {
       case _AddEventField.eventType:
         return _eventTypeController;
@@ -538,7 +538,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   Widget _buildRequiredExpansionSection({
     required GlobalKey sectionKey,
     required _AddEventField field,
-    required ExpansionTileController controller,
+    required ExpansibleController controller,
     required String title,
     String? selectedLabel,
     required Widget child,
@@ -588,7 +588,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   }
 
   Widget _buildOptionalExpansionSection({
-    required ExpansionTileController controller,
+    required ExpansibleController controller,
     required String title,
     String? selectedLabel,
     required Widget child,
@@ -765,7 +765,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         lastDate: DateTime(2100),
                       );
 
-                      if (pickedDate != null) {
+                      if (pickedDate != null && context.mounted) {
                         final pickedTime = await showTimePicker(
                           context: context,
                           initialTime: date != null

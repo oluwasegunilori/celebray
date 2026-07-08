@@ -238,16 +238,22 @@ class _EditMessageScreenState extends ConsumerState<EditMessageScreen> {
                   ),
                   const SizedBox(height: 8),
                   if (_suggestions.length > 1)
-                    ...List.generate(_suggestions.length, (index) {
-                      return RadioListTile<int>(
-                        value: index,
-                        groupValue: _selectedIndex,
-                        onChanged: (value) =>
-                            setState(() => _selectedIndex = value!),
-                        title: Text(_suggestions[index]),
-                        contentPadding: EdgeInsets.zero,
-                      );
-                    })
+                    RadioGroup<int>(
+                      groupValue: _selectedIndex,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _selectedIndex = value);
+                      },
+                      child: Column(
+                        children: List.generate(_suggestions.length, (index) {
+                          return RadioListTile<int>(
+                            value: index,
+                            title: Text(_suggestions[index]),
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        }),
+                      ),
+                    )
                   else
                     Container(
                       width: double.infinity,

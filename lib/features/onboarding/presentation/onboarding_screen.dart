@@ -59,6 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     await _saveOnboardingPreference();
+                    if (!context.mounted) return;
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (context) => SignInScreen(
@@ -130,6 +131,7 @@ class OnboardPage extends StatelessWidget {
   final String desc;
 
   const OnboardPage({
+    super.key,
     required this.image,
     required this.title,
     required this.desc,

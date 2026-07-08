@@ -2,7 +2,6 @@ import 'package:celebray/core/database/app_database.dart';
 import 'package:celebray/core/database/app_database_provider.dart';
 import 'package:celebray/features/events/data/event_entity.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_repository.g.dart';

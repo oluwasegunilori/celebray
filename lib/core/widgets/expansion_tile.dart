@@ -4,7 +4,7 @@ class AppExpansionTile extends StatelessWidget {
   final Widget title;
   final Widget child;
   final bool initiallyExpanded;
-  final ExpansionTileController? controller;
+  final ExpansibleController? controller;
 
   const AppExpansionTile({
     super.key,

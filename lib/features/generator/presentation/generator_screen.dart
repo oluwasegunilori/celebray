@@ -146,7 +146,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: selectedEvent?.id,
+                initialValue: selectedEvent?.id,
                 decoration: const InputDecoration(
                   labelText: 'Event',
                   border: OutlineInputBorder(),
@@ -212,14 +212,21 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                ...List.generate(_messages.length, (index) {
-                  return RadioListTile<int>(
-                    value: index,
-                    groupValue: _selectedMessageIndex,
-                    onChanged: (v) => setState(() => _selectedMessageIndex = v!),
-                    title: Text(_messages[index]),
-                  );
-                }),
+                RadioGroup<int>(
+                  groupValue: _selectedMessageIndex,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _selectedMessageIndex = value);
+                  },
+                  child: Column(
+                    children: List.generate(_messages.length, (index) {
+                      return RadioListTile<int>(
+                        value: index,
+                        title: Text(_messages[index]),
+                      );
+                    }),
+                  ),
+                ),
                 Row(
                   children: [
                     Expanded(
