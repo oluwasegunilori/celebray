@@ -52,6 +52,10 @@ img.Image _cleanIcon(img.Image source) {
 
   for (var y = 0; y < source.height; y++) {
     for (var x = 0; x < source.width; x++) {
+      if (!_isInsideIconPlate(x, y, source.width, source.height)) {
+        continue;
+      }
+
       final pixel = source.getPixel(x, y);
       final cleaned = _removeWhiteMattePixel(pixel);
       if (cleaned == null) continue;
@@ -128,6 +132,36 @@ bool _isGold(img.Pixel pixel) {
 const _bgR = 17;
 const _bgG = 17;
 const _bgB = 17;
+const _iconCornerRadiusFactor = 0.223;
+
+bool _isInsideIconPlate(int x, int y, int width, int height) {
+  final radius = width * _iconCornerRadiusFactor;
+  final maxX = width - 1;
+  final maxY = height - 1;
+
+  if (x < radius && y < radius) {
+    final dx = radius - x;
+    final dy = radius - y;
+    return dx * dx + dy * dy <= radius * radius;
+  }
+  if (x > maxX - radius && y < radius) {
+    final dx = x - (maxX - radius);
+    final dy = radius - y;
+    return dx * dx + dy * dy <= radius * radius;
+  }
+  if (x < radius && y > maxY - radius) {
+    final dx = radius - x;
+    final dy = y - (maxY - radius);
+    return dx * dx + dy * dy <= radius * radius;
+  }
+  if (x > maxX - radius && y > maxY - radius) {
+    final dx = x - (maxX - radius);
+    final dy = y - (maxY - radius);
+    return dx * dx + dy * dy <= radius * radius;
+  }
+
+  return true;
+}
 
 img.Image _compositeOnBackground(img.Image source) {
   final image = img.Image(
@@ -139,6 +173,10 @@ img.Image _compositeOnBackground(img.Image source) {
 
   for (var y = 0; y < source.height; y++) {
     for (var x = 0; x < source.width; x++) {
+      if (!_isInsideIconPlate(x, y, source.width, source.height)) {
+        continue;
+      }
+
       final pixel = source.getPixel(x, y);
       final alpha = pixel.a.toInt();
       if (alpha < 1) continue;
