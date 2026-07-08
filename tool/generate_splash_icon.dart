@@ -27,13 +27,14 @@ void main(List<String> args) {
   }
 
   final cleaned = _cleanIcon(source);
-  final bytes = img.encodePng(cleaned);
+  final transparentBytes = img.encodePng(cleaned);
 
-  File(appIconPath).writeAsBytesSync(bytes);
+  File(appIconPath).writeAsBytesSync(transparentBytes);
   stdout.writeln('Cleaned $appIconPath (transparent matte, rounded edge preserved)');
 
-  File(splashIconPath).writeAsBytesSync(bytes);
-  stdout.writeln('Wrote $splashIconPath');
+  final splashOpaque = _compositeOnBackground(cleaned);
+  File(splashIconPath).writeAsBytesSync(img.encodePng(splashOpaque));
+  stdout.writeln('Wrote $splashIconPath (opaque on #111111 for native splash)');
 
   _writeStoreIcons(cleaned);
   _writeLaunchImages(cleaned, launchImageDir);
@@ -194,7 +195,8 @@ void _writeLaunchImages(img.Image source, String outputDir) {
       height: entry.value,
       interpolation: img.Interpolation.average,
     );
-    File('$outputDir/${entry.key}').writeAsBytesSync(img.encodePng(resized));
+    final opaque = _compositeOnBackground(resized);
+    File('$outputDir/${entry.key}').writeAsBytesSync(img.encodePng(opaque));
   }
 
   stdout.writeln('Updated iOS LaunchImage PNGs');
@@ -219,7 +221,7 @@ void _writeLaunchStoryboard(String path) {
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4"/>
                         </subviews>
                         <color key="backgroundColor" red="0.066666666666666666" green="0.066666666666666666" blue="0.066666666666666666" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>

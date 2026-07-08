@@ -1,3 +1,4 @@
+import 'package:celebray/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// App icon with Material elevation on dark splash/loading screens.
@@ -13,13 +14,13 @@ class ElevatedAppIcon extends StatelessWidget {
     return Material(
       elevation: 16,
       shadowColor: Colors.black.withValues(alpha: 0.55),
-      color: Colors.transparent,
+      color: AppTheme.black,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
       ),
       clipBehavior: Clip.antiAlias,
       child: Image.asset(
-        'assets/app_icon.png',
+        'assets/splash_icon.png',
         width: size,
         height: size,
         fit: BoxFit.cover,
