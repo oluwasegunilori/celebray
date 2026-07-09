@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:celebray/core/utils/event_date_utils.dart';
+import 'package:celebray/features/calendar_import/calendar_import_filters.dart';
 import 'package:celebray/features/calendar_import/domain/calendar_suggestion.dart';
 import 'package:celebray/features/events/domain/event_form_options.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
@@ -73,6 +74,8 @@ class CalendarImportService {
       final rawSuggestions = <CalendarSuggestion>[];
 
       for (final calendar in calendars) {
+        if (_isHolidayCalendar(calendar)) continue;
+
         final calendarId = calendar.id;
         if (calendarId == null) continue;
 
@@ -196,11 +199,20 @@ class CalendarImportService {
     return name.contains('birthday');
   }
 
+  static bool _isHolidayCalendar(Calendar calendar) {
+    return CalendarImportFilters.isHolidayCalendar(
+      name: calendar.name,
+      accountName: calendar.accountName,
+      accountType: calendar.accountType,
+    );
+  }
+
   static bool _isCelebrationCandidate(Event event, Calendar calendar) {
     final title = event.title?.trim() ?? '';
     if (title.isEmpty) return false;
 
     final lowerTitle = title.toLowerCase();
+    if (CalendarImportFilters.isPublicHolidayTitle(title)) return false;
     const skipWords = [
       'meeting',
       'call',
