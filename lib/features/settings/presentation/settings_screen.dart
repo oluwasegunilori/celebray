@@ -247,7 +247,7 @@ Bug or idea (optional):
             leading: const Icon(Icons.contacts, color: AppTheme.primary),
             title: const Text('Import from Contacts'),
             subtitle: const Text(
-              'Birthdays from contacts — frequently in touch first',
+              'Birthdays import in one tap — or prefill a name and add the date',
             ),
             onTap: () async {
               final draft = await ContactsImportSheet.show(context);

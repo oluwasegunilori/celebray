@@ -7,6 +7,7 @@ void showAddEventSheet(
   BuildContext context, {
   EventModel? event,
   EventModel? initialData,
+  bool prefillNameOnly = false,
 }) {
   showModalBottomSheet(
     context: context,
@@ -36,6 +37,7 @@ void showAddEventSheet(
                     child: AddEventScreen(
                       event: event,
                       initialData: initialData,
+                      prefillNameOnly: prefillNameOnly,
                       scrollController: scrollController,
                     ),
                   ),

@@ -7,21 +7,34 @@ class ContactSuggestion extends Equatable {
   const ContactSuggestion({
     required this.contactId,
     required this.name,
-    required this.date,
     required this.frequencyScore,
+    this.date,
     this.isFrequentlyContacted = false,
   });
 
   final String contactId;
   final String name;
-  final DateTime date;
+  final DateTime? date;
   final int frequencyScore;
   final bool isFrequentlyContacted;
 
-  String get dedupeKey =>
-      '${name.toLowerCase().trim()}-${date.month}-${date.day}';
+  bool get hasBirthday => date != null;
+
+  String get dedupeKey => hasBirthday
+      ? '${name.toLowerCase().trim()}-${date!.month}-${date!.day}'
+      : 'contact-$contactId';
 
   EventModel toDraftEvent() {
+    assert(hasBirthday, 'Use toNamePrefillDraft for contacts without birthdays');
+    return _baseDraft(date: date!);
+  }
+
+  /// Name and defaults only — user picks the celebration date in Add Event.
+  EventModel toNamePrefillDraft() {
+    return _baseDraft(date: DateTime.now());
+  }
+
+  EventModel _baseDraft({required DateTime date}) {
     final relationship = EventFormOptions.relationships.first;
     return EventModel(
       id: uniqueId(),
@@ -58,18 +71,35 @@ class ContactImportResult {
     required this.status,
     this.suggestions = const [],
     this.frequentSuggestions = const [],
+    this.namePrefills = const [],
+    this.frequentNamePrefills = const [],
     this.message,
   });
 
   final ContactImportStatus status;
   final List<ContactSuggestion> suggestions;
   final List<ContactSuggestion> frequentSuggestions;
+  final List<ContactSuggestion> namePrefills;
+  final List<ContactSuggestion> frequentNamePrefills;
   final String? message;
 
-  List<ContactSuggestion> get allSuggestions => [
+  bool get hasBirthdays =>
+      frequentSuggestions.isNotEmpty || suggestions.isNotEmpty;
+
+  bool get hasNamePrefills =>
+      frequentNamePrefills.isNotEmpty || namePrefills.isNotEmpty;
+
+  List<ContactSuggestion> get allBirthdaySuggestions => [
         ...frequentSuggestions,
         ...suggestions.where(
           (s) => !frequentSuggestions.any((f) => f.dedupeKey == s.dedupeKey),
+        ),
+      ];
+
+  List<ContactSuggestion> get allNamePrefills => [
+        ...frequentNamePrefills,
+        ...namePrefills.where(
+          (s) => !frequentNamePrefills.any((f) => f.dedupeKey == s.dedupeKey),
         ),
       ];
 }

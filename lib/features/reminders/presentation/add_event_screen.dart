@@ -20,11 +20,13 @@ class AddEventScreen extends ConsumerStatefulWidget {
     super.key,
     this.event,
     this.initialData,
+    this.prefillNameOnly = false,
     this.scrollController,
   });
 
   final EventModel? event;
   final EventModel? initialData;
+  final bool prefillNameOnly;
   final ScrollController? scrollController;
 
   @override
@@ -212,7 +214,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     eventDateController = TextEditingController(
       text: _seed != null
           ? dateFormatterDay.format(_seed!.date)
-          : initialData != null
+          : initialData != null && !widget.prefillNameOnly
               ? dateFormatterDay.format(initialData.date)
               : '',
     );
@@ -232,7 +234,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
       _eventTypeManuallySelected = true;
     } else if (initialData != null) {
       selectedType = initialData.type;
-      date = initialData.date;
+      selectedRelationship = initialData.relationship;
+      selectedSex = initialData.sex;
+      closeness = initialData.closeness.toDouble();
+      if (!widget.prefillNameOnly) {
+        date = initialData.date;
+      }
     }
 
     if (imagePath != null && !File(imagePath!).existsSync()) {

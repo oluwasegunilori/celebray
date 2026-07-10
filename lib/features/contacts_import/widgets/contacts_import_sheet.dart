@@ -4,6 +4,7 @@ import 'package:celebray/features/contacts_import/contacts_import_service.dart';
 import 'package:celebray/features/contacts_import/domain/contact_suggestion.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
+import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,7 +54,7 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
     setState(() {
       _result = result;
       if (result.status == ContactImportStatus.ready) {
-        _selectedKeys.addAll(result.allSuggestions.map((s) => s.dedupeKey));
+        _selectedKeys.addAll(result.allBirthdaySuggestions.map((s) => s.dedupeKey));
       }
     });
   }
@@ -62,7 +63,7 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
     final result = _result;
     if (result == null || result.status != ContactImportStatus.ready) return;
 
-    final selected = result.allSuggestions
+    final selected = result.allBirthdaySuggestions
         .where((s) => _selectedKeys.contains(s.dedupeKey))
         .toList();
     if (selected.isEmpty) return;
@@ -88,8 +89,18 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
     );
   }
 
-  void _customizeSuggestion(ContactSuggestion suggestion) {
-    Navigator.pop(context, suggestion.toDraftEvent());
+  void _openSuggestion(ContactSuggestion suggestion) {
+    if (suggestion.hasBirthday) {
+      Navigator.pop(context, suggestion.toDraftEvent());
+      return;
+    }
+
+    Navigator.pop(context);
+    showAddEventSheet(
+      context,
+      initialData: suggestion.toNamePrefillDraft(),
+      prefillNameOnly: true,
+    );
   }
 
   Future<void> _openSettings() async {
@@ -144,15 +155,16 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'We read birthdays saved in your contacts. People you talk to '
-                  'most often appear first on Android. Celebrations already in '
-                  'Celebray are hidden.',
+                  'Birthdays import in one tap. For everyone else, tap a name '
+                  'and add their celebration date.',
                   style: TextStyle(color: Colors.grey.shade700, height: 1.4),
                 ),
               ),
               const SizedBox(height: 12),
               Expanded(child: _buildBody(scrollController)),
-              if (_result?.status == ContactImportStatus.ready) _buildImportBar(),
+              if (_result?.status == ContactImportStatus.ready &&
+                  _result!.hasBirthdays)
+                _buildImportBar(),
             ],
           );
         },
@@ -174,38 +186,30 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
         final items = <Widget>[];
 
         if (result.frequentSuggestions.isNotEmpty) {
-          items.add(
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Text(
-                'Frequently in touch',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-            ),
-          );
+          items.add(_sectionHeader('Frequently in touch · birthdays'));
           for (final suggestion in result.frequentSuggestions) {
-            items.add(_suggestionTile(suggestion, highlight: true));
+            items.add(_birthdayTile(suggestion, highlight: true));
           }
         }
 
         if (result.suggestions.isNotEmpty) {
-          items.add(
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: Text(
-                'All birthdays',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-            ),
-          );
+          items.add(_sectionHeader('All birthdays'));
           for (final suggestion in result.suggestions) {
-            items.add(_suggestionTile(suggestion));
+            items.add(_birthdayTile(suggestion));
+          }
+        }
+
+        if (result.frequentNamePrefills.isNotEmpty) {
+          items.add(_sectionHeader('Frequently in touch · add date'));
+          for (final suggestion in result.frequentNamePrefills) {
+            items.add(_namePrefillTile(suggestion, highlight: true));
+          }
+        }
+
+        if (result.namePrefills.isNotEmpty) {
+          items.add(_sectionHeader('Add their celebration date'));
+          for (final suggestion in result.namePrefills) {
+            items.add(_namePrefillTile(suggestion));
           }
         }
 
@@ -233,7 +237,7 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
           scrollController: scrollController,
           icon: Icons.person_search_outlined,
           title: result.status == ContactImportStatus.empty
-              ? 'No birthdays found'
+              ? 'Nothing new to add'
               : 'Could not import',
           message: result.message ?? 'Something went wrong.',
           primaryLabel: 'Try Again',
@@ -244,17 +248,32 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
     }
   }
 
-  Widget _suggestionTile(ContactSuggestion suggestion, {bool highlight = false}) {
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade800,
+        ),
+      ),
+    );
+  }
+
+  Widget _birthdayTile(ContactSuggestion suggestion, {bool highlight = false}) {
     final selected = _selectedKeys.contains(suggestion.dedupeKey);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
-        color: highlight ? AppTheme.primary.withValues(alpha: 0.08) : AppTheme.surfaceMuted,
+        color: highlight
+            ? AppTheme.primary.withValues(alpha: 0.08)
+            : AppTheme.surfaceMuted,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _customizeSuggestion(suggestion),
+          onTap: () => _openSuggestion(suggestion),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -285,7 +304,7 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Birthday · ${dateFormatterDay.format(suggestion.date)}',
+                        'Birthday · ${dateFormatterDay.format(suggestion.date!)}',
                         style: TextStyle(
                           color: Colors.grey.shade700,
                           fontSize: 13,
@@ -296,8 +315,60 @@ class _ContactsImportSheetState extends ConsumerState<ContactsImportSheet> {
                 ),
                 IconButton(
                   tooltip: 'Customize before adding',
-                  onPressed: () => _customizeSuggestion(suggestion),
+                  onPressed: () => _openSuggestion(suggestion),
                   icon: const Icon(Icons.edit_outlined, size: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _namePrefillTile(
+    ContactSuggestion suggestion, {
+    bool highlight = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: highlight
+            ? AppTheme.primary.withValues(alpha: 0.08)
+            : AppTheme.surfaceMuted,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _openSuggestion(suggestion),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        suggestion.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'No birthday saved — tap to add date',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.grey.shade600,
                 ),
               ],
             ),
