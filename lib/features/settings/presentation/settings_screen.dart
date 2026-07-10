@@ -1,6 +1,8 @@
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/core/constants/app_constants.dart';
 import 'package:celebray/features/calendar_import/widgets/calendar_import_sheet.dart';
+import 'package:celebray/features/contacts_import/widgets/contacts_import_sheet.dart';
+import 'package:celebray/features/settings/presentation/reminder_preferences_section.dart';
 import 'package:celebray/features/auth/presentation/sign_in_screen.dart';
 import 'package:celebray/features/events/providers/event_provider.dart';
 import 'package:celebray/features/auth/data/auth_service.dart';
@@ -215,7 +217,7 @@ Bug or idea (optional):
             secondary: const Icon(Icons.notifications, color: AppTheme.primary),
             title: const Text('Celebration alerts'),
             subtitle: const Text(
-              'Midnight alert on the day with quick access to share',
+              'Advance reminders plus celebration day alerts',
             ),
             value: _notificationsEnabled,
             activeThumbColor: AppTheme.primary,
@@ -228,6 +230,7 @@ Bug or idea (optional):
               if (value) await _rescheduleReminders();
             },
           ),
+          ReminderPreferencesSection(onChanged: _rescheduleReminders),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.event_available, color: AppTheme.primary),
@@ -235,6 +238,19 @@ Bug or idea (optional):
             subtitle: const Text('Find birthdays and anniversaries to add'),
             onTap: () async {
               final draft = await CalendarImportSheet.show(context);
+              if (draft != null && context.mounted) {
+                showAddEventSheet(context, initialData: draft);
+              }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.contacts, color: AppTheme.primary),
+            title: const Text('Import from Contacts'),
+            subtitle: const Text(
+              'Birthdays from contacts — frequently in touch first',
+            ),
+            onTap: () async {
+              final draft = await ContactsImportSheet.show(context);
               if (draft != null && context.mounted) {
                 showAddEventSheet(context, initialData: draft);
               }

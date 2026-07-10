@@ -39,6 +39,7 @@ Future<void> main() async {
 
   final events = await db.watchAllEvents().first;
   await NotificationService.rescheduleAll(events);
+  await UpcomingWidgetService.syncEvents(events);
 
   runApp(
     ProviderScope(

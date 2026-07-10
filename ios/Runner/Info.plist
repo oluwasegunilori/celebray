@@ -45,6 +45,8 @@
 		<string>Celebray reads your calendar to suggest birthdays and anniversaries you may want to track.</string>
 		<key>NSCalendarsFullAccessUsageDescription</key>
 		<string>Celebray reads your calendar to suggest birthdays and anniversaries you may want to track.</string>
+		<key>NSContactsUsageDescription</key>
+		<string>Celebray reads birthdays saved in your contacts so you can import celebrations quickly.</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>GIDClientID</key>

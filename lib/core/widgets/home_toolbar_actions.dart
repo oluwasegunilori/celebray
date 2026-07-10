@@ -1,9 +1,10 @@
 import 'package:celebray/core/theme/app_theme.dart';
 import 'package:celebray/features/calendar_import/widgets/calendar_import_sheet.dart';
+import 'package:celebray/features/contacts_import/widgets/contacts_import_sheet.dart';
 import 'package:celebray/features/reminders/presentation/add_event_sheet.dart';
 import 'package:flutter/material.dart';
 
-enum _ToolbarMenuAction { importCalendar }
+enum _ToolbarMenuAction { importCalendar, importContacts }
 
 class HomeToolbarActions extends StatelessWidget {
   final GlobalKey? settingsKey;
@@ -12,6 +13,13 @@ class HomeToolbarActions extends StatelessWidget {
 
   static Future<void> openCalendarImport(BuildContext context) async {
     final draft = await CalendarImportSheet.show(context);
+    if (draft != null && context.mounted) {
+      showAddEventSheet(context, initialData: draft);
+    }
+  }
+
+  static Future<void> openContactsImport(BuildContext context) async {
+    final draft = await ContactsImportSheet.show(context);
     if (draft != null && context.mounted) {
       showAddEventSheet(context, initialData: draft);
     }
@@ -34,6 +42,8 @@ class HomeToolbarActions extends StatelessWidget {
             switch (action) {
               case _ToolbarMenuAction.importCalendar:
                 openCalendarImport(context);
+              case _ToolbarMenuAction.importContacts:
+                openContactsImport(context);
             }
           },
           itemBuilder: (context) => [
@@ -46,6 +56,18 @@ class HomeToolbarActions extends StatelessWidget {
                   color: AppTheme.primary,
                 ),
                 title: Text('Import from my calendar'),
+                dense: true,
+              ),
+            ),
+            const PopupMenuItem(
+              value: _ToolbarMenuAction.importContacts,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.contacts_outlined,
+                  color: AppTheme.primary,
+                ),
+                title: Text('Import from contacts'),
                 dense: true,
               ),
             ),

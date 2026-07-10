@@ -1,5 +1,6 @@
 import 'package:celebray/features/events/domain/event_form_options.dart';
 import 'package:celebray/features/events/domain/event_model.dart';
+import 'package:celebray/features/notifications/reminder_preferences.dart';
 
 /// Headline and metadata for event list rows, without repeating type/relationship.
 class EventDisplayLabels {
@@ -66,14 +67,51 @@ class EventDisplayLabels {
 
   /// Celebration-day notification title without repeating the event type.
   static String notificationTitle(EventModel event) {
+    return reminderTitle(event, ReminderOffset.celebrationDay);
+  }
+
+  static String reminderTitle(EventModel event, ReminderOffset offset) {
     final labels = from(event);
     final type = event.type.trim();
     final headline = labels.title;
+    final typePhrase = type.isEmpty ||
+            _alreadyMentioned(headline.toLowerCase(), type)
+        ? headline
+        : "$headline's $type";
 
-    if (type.isEmpty || _alreadyMentioned(headline.toLowerCase(), type)) {
-      return "🎉 It's $headline today!";
+    return switch (offset) {
+      ReminderOffset.days7 => 'Coming up: $typePhrase in 7 days',
+      ReminderOffset.days3 => 'Coming up: $typePhrase in 3 days',
+      ReminderOffset.days1 => 'Tomorrow: $typePhrase',
+      ReminderOffset.morningOf => "Today: $typePhrase",
+      ReminderOffset.celebrationDay => "🎉 It's $typePhrase today!",
+    };
+  }
+
+  static String reminderBody(
+    EventModel event,
+    ReminderOffset offset, {
+    required bool hasSavedMessage,
+  }) {
+    final recipient = recipientLabel(event);
+    if (hasSavedMessage) {
+      return switch (offset) {
+        ReminderOffset.celebrationDay =>
+          'Your message for $recipient is ready — tap to touch up or share.',
+        ReminderOffset.morningOf =>
+          'Your message for $recipient is ready — share when you are.',
+        _ =>
+          'Your saved message for $recipient is ready. Generate ideas or share anytime.',
+      };
     }
 
-    return "🎉 It's $headline's $type today!";
+    return switch (offset) {
+      ReminderOffset.celebrationDay =>
+        'Tap for customizable message ideas for $recipient — pick one, refine, and share.',
+      ReminderOffset.morningOf =>
+        'Generate a message for $recipient before the day gets away.',
+      _ =>
+        'Get a head start — tap to generate message ideas for $recipient.',
+    };
   }
 }
